@@ -11,6 +11,11 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PAYMENT_DB_USERNAME:-myuser} -d ${PAYMENT_DB_NAME:-paymentdb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   postgres-inventory:
     image: postgres:16
@@ -23,6 +28,11 @@ services:
       - "5434:5432"
     volumes:
       - postgres_inventory_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${INVENTORY_DB_USERNAME:-myuser} -d ${INVENTORY_DB_NAME:-inventorydb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   postgres-order:
     image: postgres:16
@@ -35,6 +45,11 @@ services:
       - "5435:5432"
     volumes:
       - postgres_order_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${ORDER_DB_USERNAME:-myuser} -d ${ORDER_DB_NAME:-orderdb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   kafka:
     image: bitnamilegacy/kafka:3.7.1-debian-12-r4
@@ -52,6 +67,11 @@ services:
       - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
       - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
       - ALLOW_PLAINTEXT_LISTENER=yes
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/bitnami/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
 
   order-service:
     build:
@@ -66,10 +86,19 @@ services:
       SCHEMA_REGISTRY_URL: http://schema-registry:8081
     ports:
       - "8081:8081"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8081/actuator/health/readiness >/dev/null"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 45s
     depends_on:
-      - postgres-order
-      - kafka
-      - schema-registry
+      postgres-order:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      schema-registry:
+        condition: service_healthy
 
   payment-service:
     build:
@@ -84,10 +113,19 @@ services:
       SCHEMA_REGISTRY_URL: http://schema-registry:8081
     ports:
       - "8082:8082"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8082/actuator/health/readiness >/dev/null"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 45s
     depends_on:
-      - postgres
-      - kafka
-      - schema-registry
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      schema-registry:
+        condition: service_healthy
 
   notification-service:
     build:
@@ -99,9 +137,17 @@ services:
       SCHEMA_REGISTRY_URL: http://schema-registry:8081
     ports:
       - "8083:8083"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8083/actuator/health/readiness >/dev/null"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 45s
     depends_on:
-      - kafka
-      - schema-registry
+      kafka:
+        condition: service_healthy
+      schema-registry:
+        condition: service_healthy
 
   inventory-service:
     build:
@@ -116,10 +162,19 @@ services:
       SCHEMA_REGISTRY_URL: http://schema-registry:8081
     ports:
       - "8084:8084"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8084/actuator/health/readiness >/dev/null"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 45s
     depends_on:
-      - postgres-inventory
-      - kafka
-      - schema-registry
+      postgres-inventory:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      schema-registry:
+        condition: service_healthy
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
@@ -131,8 +186,10 @@ services:
       - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
       - KAFKA_CLUSTERS_0_SCHEMAREGISTRY=http://schema-registry:8081
     depends_on:
-      - kafka
-      - schema-registry
+      kafka:
+        condition: service_healthy
+      schema-registry:
+        condition: service_healthy
 
   schema-registry:
     image: confluentinc/cp-schema-registry:7.6.1
@@ -143,8 +200,14 @@ services:
       - SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS=PLAINTEXT://kafka:9092
       - SCHEMA_REGISTRY_HOST_NAME=schema-registry
       - SCHEMA_REGISTRY_LISTENERS=http://0.0.0.0:8081
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8081/subjects >/dev/null"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
 
   pgadmin:
     image: dpage/pgadmin4
@@ -155,9 +218,12 @@ services:
     ports:
       - "5050:80"
     depends_on:
-      - postgres
-      - postgres-inventory
-      - postgres-order
+      postgres:
+        condition: service_healthy
+      postgres-inventory:
+        condition: service_healthy
+      postgres-order:
+        condition: service_healthy
 
   prometheus:
     image: prom/prometheus:v2.53.0
