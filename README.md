@@ -148,7 +148,13 @@ Invoke-RestMethod -Method Get `
 - route `/api/inventory/**` vers `inventory-service`
 - route `/api/notifications/**` vers `notification-service`
 - ajoute ou propage le header `X-Correlation-Id`
+- applique un rate limit par client, configurable via `API_GATEWAY_RATE_LIMIT_*`
 - expose `/actuator/prometheus`
+
+Rate limit local par defaut :
+- `API_GATEWAY_RATE_LIMIT_ENABLED=true`
+- `API_GATEWAY_RATE_LIMIT_REQUESTS=60`
+- `API_GATEWAY_RATE_LIMIT_WINDOW=1m`
 
 Smoke test complet :
 
