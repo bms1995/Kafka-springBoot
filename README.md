@@ -159,6 +159,18 @@ Les evenements Kafka utilisent Avro :
 - namespace partage : `com.example.events`
 - Schema Registry : `SCHEMA_REGISTRY_URL`
 
+## Event Metadata
+Les evenements de saga portent des metadonnees de tracing :
+- `eventId` : identifiant unique de l'evenement
+- `correlationId` : identifiant stable de la saga complete
+- `causationId` : evenement parent qui a cause le nouvel evenement
+- `occurredAt` : horodatage de production
+- `producer` : service producteur
+- `schemaVersion` : version logique du contrat
+
+Exemple de chaine :
+`order-created.eventId` devient le `causationId` de `payment-processed`, tout en gardant le meme `correlationId`.
+
 ## Observabilite
 Health :
 - order-service : http://localhost:8081/actuator/health

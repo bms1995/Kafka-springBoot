@@ -7,6 +7,7 @@ import com.example.orderservice.api.OrderResponse;
 import com.example.orderservice.entity.OrderEventHistory;
 import com.example.orderservice.entity.OrderEntity;
 import com.example.orderservice.entity.ProcessedEvent;
+import com.example.orderservice.event.EventMetadata;
 import com.example.orderservice.repository.OrderEventHistoryRepository;
 import com.example.orderservice.repository.OrderRepository;
 import com.example.orderservice.repository.ProcessedEventRepository;
@@ -36,12 +37,19 @@ public class OrderService {
                 ? request.orderId()
                 : UUID.randomUUID().toString();
 
+        EventMetadata metadata = EventMetadata.start("order-service");
         OrderCreatedEvent event = new OrderCreatedEvent(
                 orderId,
                 request.productName(),
                 request.quantity(),
                 request.amount().toPlainString(),
-                request.customerEmail()
+                request.customerEmail(),
+                metadata.eventId(),
+                metadata.correlationId(),
+                metadata.causationId(),
+                metadata.occurredAt(),
+                metadata.producer(),
+                metadata.schemaVersion()
         );
 
         orderRepository.save(new OrderEntity(

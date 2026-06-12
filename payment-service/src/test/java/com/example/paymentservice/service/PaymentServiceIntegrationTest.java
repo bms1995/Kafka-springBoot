@@ -63,7 +63,13 @@ class PaymentServiceIntegrationTest {
                 "Laptop",
                 1,
                 BigDecimal.valueOf(250).toPlainString(),
-                "customer@example.com"
+                "customer@example.com",
+                "order-created-event-it-1",
+                "correlation-it-1",
+                "causation-it-1",
+                "2026-06-12T10:00:00Z",
+                "order-service",
+                "1"
         );
 
         paymentService.processPayment(event);

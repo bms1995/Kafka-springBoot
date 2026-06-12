@@ -4,6 +4,7 @@ import com.example.inventoryservice.entity.ProcessedEvent;
 import com.example.events.InventoryFailedEvent;
 import com.example.events.InventoryUpdatedEvent;
 import com.example.events.PaymentProcessedEvent;
+import com.example.inventoryservice.event.EventMetadata;
 import com.example.inventoryservice.kafka.InventoryProducer;
 import com.example.inventoryservice.repository.ProcessedEventRepository;
 import lombok.RequiredArgsConstructor;
@@ -30,36 +31,50 @@ public class InventoryService {
         }
 
         if (!SUCCESS_PAYMENT_STATUS.equals(event.getPaymentStatus())) {
-            publishInventoryFailure(event.getOrderId(), "Payment status is not successful");
+            publishInventoryFailure(event, "Payment status is not successful");
             processedEventRepository.save(new ProcessedEvent(event.getOrderId()));
             return;
         }
 
         if (event.getOrderId().startsWith(INVENTORY_FAILURE_ORDER_PREFIX)) {
-            publishInventoryFailure(event.getOrderId(), "Inventory is not available");
+            publishInventoryFailure(event, "Inventory is not available");
             processedEventRepository.save(new ProcessedEvent(event.getOrderId()));
             return;
         }
 
         log.info("Updating inventory for orderId={}", event.getOrderId());
 
+        EventMetadata metadata = EventMetadata.from(event, "inventory-service");
         InventoryUpdatedEvent inventoryEvent = new InventoryUpdatedEvent(
                 event.getOrderId(),
-                UPDATED_STATUS
+                UPDATED_STATUS,
+                metadata.eventId(),
+                metadata.correlationId(),
+                metadata.causationId(),
+                metadata.occurredAt(),
+                metadata.producer(),
+                metadata.schemaVersion()
         );
 
         inventoryProducer.send(inventoryEvent);
         processedEventRepository.save(new ProcessedEvent(event.getOrderId()));
     }
 
-    private void publishInventoryFailure(String orderId, String reason) {
+    private void publishInventoryFailure(PaymentProcessedEvent event, String reason) {
+        EventMetadata metadata = EventMetadata.from(event, "inventory-service");
         InventoryFailedEvent failedEvent = new InventoryFailedEvent(
-                orderId,
+                event.getOrderId(),
                 FAILED_STATUS,
-                reason
+                reason,
+                metadata.eventId(),
+                metadata.correlationId(),
+                metadata.causationId(),
+                metadata.occurredAt(),
+                metadata.producer(),
+                metadata.schemaVersion()
         );
 
         inventoryProducer.sendFailure(failedEvent);
-        log.warn("Inventory update failed for orderId={}: {}", orderId, reason);
+        log.warn("Inventory update failed for orderId={}: {}", event.getOrderId(), reason);
     }
 }

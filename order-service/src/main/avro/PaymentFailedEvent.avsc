@@ -6,6 +6,12 @@
     { "name": "orderId", "type": "string" },
     { "name": "status", "type": "string" },
     { "name": "reason", "type": "string" },
-    { "name": "customerEmail", "type": "string" }
+    { "name": "customerEmail", "type": "string" },
+    { "name": "eventId", "type": "string" },
+    { "name": "correlationId", "type": "string" },
+    { "name": "causationId", "type": "string" },
+    { "name": "occurredAt", "type": "string" },
+    { "name": "producer", "type": "string" },
+    { "name": "schemaVersion", "type": "string" }
   ]
 }

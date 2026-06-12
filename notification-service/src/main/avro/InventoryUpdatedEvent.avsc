@@ -4,6 +4,12 @@
   "namespace": "com.example.events",
   "fields": [
     { "name": "orderId", "type": "string" },
-    { "name": "status", "type": "string" }
+    { "name": "status", "type": "string" },
+    { "name": "eventId", "type": "string" },
+    { "name": "correlationId", "type": "string" },
+    { "name": "causationId", "type": "string" },
+    { "name": "occurredAt", "type": "string" },
+    { "name": "producer", "type": "string" },
+    { "name": "schemaVersion", "type": "string" }
   ]
 }

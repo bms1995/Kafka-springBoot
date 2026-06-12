@@ -8,6 +8,7 @@ import com.example.events.OrderCreatedEvent;
 import com.example.events.PaymentFailedEvent;
 import com.example.events.PaymentProcessedEvent;
 import com.example.events.PaymentRefundedEvent;
+import com.example.paymentservice.event.EventMetadata;
 import com.example.paymentservice.repository.PaymentTransactionRepository;
 import com.example.paymentservice.repository.ProcessedEventRepository;
 import com.example.paymentservice.metrics.PaymentMetrics;
@@ -47,11 +48,18 @@ public class PaymentService {
 
         if (amount.intValue() > PAYMENT_FAILURE_THRESHOLD) {
             String reason = "Payment amount exceeds threshold";
+            EventMetadata metadata = EventMetadata.from(event, "payment-service");
             PaymentFailedEvent failedEvent = new PaymentFailedEvent(
                     event.getOrderId(),
                     FAILED_STATUS,
                     reason,
-                    event.getCustomerEmail()
+                    event.getCustomerEmail(),
+                    metadata.eventId(),
+                    metadata.correlationId(),
+                    metadata.causationId(),
+                    metadata.occurredAt(),
+                    metadata.producer(),
+                    metadata.schemaVersion()
             );
 
             transaction.markFailed(reason);
@@ -65,10 +73,17 @@ public class PaymentService {
 
         log.info("Processing payment for orderId={}", event.getOrderId());
 
+        EventMetadata metadata = EventMetadata.from(event, "payment-service");
         PaymentProcessedEvent paymentEvent = new PaymentProcessedEvent(
                 event.getOrderId(),
                 SUCCESS_STATUS,
-                event.getCustomerEmail()
+                event.getCustomerEmail(),
+                metadata.eventId(),
+                metadata.correlationId(),
+                metadata.causationId(),
+                metadata.occurredAt(),
+                metadata.producer(),
+                metadata.schemaVersion()
         );
 
         transaction.markSuccess();
@@ -99,10 +114,17 @@ public class PaymentService {
                 event.getOrderId(),
                 event.getReason());
 
+        EventMetadata metadata = EventMetadata.from(event, "payment-service");
         PaymentRefundedEvent refundedEvent = new PaymentRefundedEvent(
                 event.getOrderId(),
                 REFUNDED_STATUS,
-                "Inventory reservation failed: " + event.getReason()
+                "Inventory reservation failed: " + event.getReason(),
+                metadata.eventId(),
+                metadata.correlationId(),
+                metadata.causationId(),
+                metadata.occurredAt(),
+                metadata.producer(),
+                metadata.schemaVersion()
         );
 
         transaction.markRefunded(refundedEvent.getReason());

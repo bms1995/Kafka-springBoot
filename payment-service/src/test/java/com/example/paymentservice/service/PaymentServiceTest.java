@@ -134,7 +134,13 @@ class PaymentServiceTest {
         InventoryFailedEvent event = new InventoryFailedEvent(
                 "order-1",
                 "FAILED",
-                "Inventory is not available"
+                "Inventory is not available",
+                "inventory-failed-event-1",
+                "correlation-1",
+                "payment-processed-event-1",
+                "2026-06-12T10:00:00Z",
+                "inventory-service",
+                "1"
         );
         PaymentTransaction transaction = new PaymentTransaction(
                 event.getOrderId(),
@@ -171,7 +177,13 @@ class PaymentServiceTest {
         InventoryFailedEvent event = new InventoryFailedEvent(
                 "order-1",
                 "FAILED",
-                "Inventory is not available"
+                "Inventory is not available",
+                "inventory-failed-event-1",
+                "correlation-1",
+                "payment-processed-event-1",
+                "2026-06-12T10:00:00Z",
+                "inventory-service",
+                "1"
         );
         PaymentTransaction transaction = new PaymentTransaction(
                 event.getOrderId(),
@@ -198,7 +210,13 @@ class PaymentServiceTest {
                 "Laptop",
                 1,
                 amount.toPlainString(),
-                "customer@example.com"
+                "customer@example.com",
+                "order-created-event-1",
+                "correlation-1",
+                "causation-1",
+                "2026-06-12T10:00:00Z",
+                "order-service",
+                "1"
         );
     }
 }

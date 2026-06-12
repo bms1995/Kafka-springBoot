@@ -32,7 +32,7 @@ public class OrderSagaConsumer {
             @Header(KafkaHeaders.OFFSET) long offset
     ) {
         log.info("Received payment-processed event: {}", event);
-        orderService.markPaymentConfirmed(envelope(event, event.getOrderId(), topic, partition, offset));
+        orderService.markPaymentConfirmed(envelope(event, event.getEventId(), event.getOrderId(), topic, partition, offset));
     }
 
     @KafkaListener(topics = "payment-failed", groupId = "order-saga-group")
@@ -43,7 +43,7 @@ public class OrderSagaConsumer {
             @Header(KafkaHeaders.OFFSET) long offset
     ) {
         log.info("Received payment-failed event: {}", event);
-        orderService.markPaymentFailed(envelope(event, event.getOrderId(), topic, partition, offset), event.getReason());
+        orderService.markPaymentFailed(envelope(event, event.getEventId(), event.getOrderId(), topic, partition, offset), event.getReason());
     }
 
     @KafkaListener(topics = "inventory-updated", groupId = "order-saga-group")
@@ -54,7 +54,7 @@ public class OrderSagaConsumer {
             @Header(KafkaHeaders.OFFSET) long offset
     ) {
         log.info("Received inventory-updated event: {}", event);
-        orderService.markInventoryConfirmed(envelope(event, event.getOrderId(), topic, partition, offset));
+        orderService.markInventoryConfirmed(envelope(event, event.getEventId(), event.getOrderId(), topic, partition, offset));
     }
 
     @KafkaListener(topics = "inventory-failed", groupId = "order-saga-group")
@@ -65,7 +65,7 @@ public class OrderSagaConsumer {
             @Header(KafkaHeaders.OFFSET) long offset
     ) {
         log.info("Received inventory-failed event: {}", event);
-        orderService.markInventoryFailed(envelope(event, event.getOrderId(), topic, partition, offset), event.getReason());
+        orderService.markInventoryFailed(envelope(event, event.getEventId(), event.getOrderId(), topic, partition, offset), event.getReason());
     }
 
     @KafkaListener(topics = "payment-refunded", groupId = "order-saga-group")
@@ -76,21 +76,22 @@ public class OrderSagaConsumer {
             @Header(KafkaHeaders.OFFSET) long offset
     ) {
         log.info("Received payment-refunded event: {}", event);
-        orderService.markRefunded(envelope(event, event.getOrderId(), topic, partition, offset), event.getReason());
+        orderService.markRefunded(envelope(event, event.getEventId(), event.getOrderId(), topic, partition, offset), event.getReason());
     }
 
     private OrderEventEnvelope envelope(
             SpecificRecordBase event,
+            String eventId,
             String orderId,
             String topic,
             int partition,
             long offset
     ) {
         return new OrderEventEnvelope(
-                topic + "-" + partition + "-" + offset,
+                eventId,
                 orderId,
                 event.getClass().getSimpleName(),
-                topic,
+                topic + "[" + partition + "]@" + offset,
                 payloadSerializer.toJson(event)
         );
     }

@@ -35,7 +35,13 @@ class InventoryServiceTest {
         PaymentProcessedEvent event = new PaymentProcessedEvent(
                 "order-1",
                 "SUCCESS",
-                "customer@example.com"
+                "customer@example.com",
+                "payment-processed-event-1",
+                "correlation-1",
+                "order-created-event-1",
+                "2026-06-12T10:00:00Z",
+                "payment-service",
+                "1"
         );
         when(processedEventRepository.existsById(event.getOrderId())).thenReturn(false);
 
@@ -60,7 +66,13 @@ class InventoryServiceTest {
         PaymentProcessedEvent event = new PaymentProcessedEvent(
                 "fail-inventory-order-1",
                 "SUCCESS",
-                "customer@example.com"
+                "customer@example.com",
+                "payment-processed-event-1",
+                "correlation-1",
+                "order-created-event-1",
+                "2026-06-12T10:00:00Z",
+                "payment-service",
+                "1"
         );
         when(processedEventRepository.existsById(event.getOrderId())).thenReturn(false);
 
@@ -83,7 +95,13 @@ class InventoryServiceTest {
         PaymentProcessedEvent event = new PaymentProcessedEvent(
                 "order-1",
                 "SUCCESS",
-                "customer@example.com"
+                "customer@example.com",
+                "payment-processed-event-1",
+                "correlation-1",
+                "order-created-event-1",
+                "2026-06-12T10:00:00Z",
+                "payment-service",
+                "1"
         );
         when(processedEventRepository.existsById(event.getOrderId())).thenReturn(true);
 
