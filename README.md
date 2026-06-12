@@ -89,6 +89,13 @@ Invoke-RestMethod -Method Get `
   -Uri "http://localhost:8081/api/orders/order-123"
 ```
 
+Consulter la timeline d'evenements d'une commande :
+
+```powershell
+Invoke-RestMethod -Method Get `
+  -Uri "http://localhost:8081/api/orders/order-123/events"
+```
+
 Smoke test complet :
 
 ```powershell
@@ -116,6 +123,15 @@ Statuts de commande materialises par `order-service` :
 - `INVENTORY_CONFIRMED`
 - `INVENTORY_FAILED`
 - `REFUNDED`
+
+## Inbox et Audit Trail
+`order-service` garde une trace des evenements de saga recus :
+- table `processed_events` pour ignorer les doublons Kafka
+- table `order_event_history` pour reconstruire la timeline metier
+- id d'evenement derive de `topic-partition-offset`
+- endpoint `GET /api/orders/{orderId}/events`
+
+Cette approche simule un pattern inbox/read-model utilise en production pour debug, replay controle et audit.
 
 ## Anti Double Paiement
 `payment-service` combine :
@@ -181,6 +197,8 @@ Services couverts :
 ## Migrations DB
 Flyway gere les schemas :
 - `order-service/src/main/resources/db/migration/V1__init_order_schema.sql`
+- `order-service/src/main/resources/db/migration/V2__add_order_read_model_columns.sql`
+- `order-service/src/main/resources/db/migration/V3__add_order_inbox_and_event_history.sql`
 - `payment-service/src/main/resources/db/migration/V1__init_payment_schema.sql`
 - `inventory-service/src/main/resources/db/migration/V1__init_inventory_schema.sql`
 

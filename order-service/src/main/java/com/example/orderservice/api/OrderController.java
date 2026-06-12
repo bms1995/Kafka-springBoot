@@ -4,6 +4,8 @@ import com.example.orderservice.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/orders")
 @RequiredArgsConstructor
@@ -20,5 +22,10 @@ public class OrderController {
     @GetMapping("/{orderId}")
     public OrderResponse getOrder(@PathVariable String orderId) {
         return orderService.getOrder(orderId);
+    }
+
+    @GetMapping("/{orderId}/events")
+    public List<OrderEventResponse> getOrderEvents(@PathVariable String orderId) {
+        return orderService.getOrderEvents(orderId);
     }
 }

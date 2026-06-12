@@ -2,23 +2,33 @@ package com.example.orderservice.service;
 
 import com.example.events.OrderCreatedEvent;
 import com.example.orderservice.api.CreateOrderRequest;
+import com.example.orderservice.api.OrderEventResponse;
 import com.example.orderservice.api.OrderResponse;
+import com.example.orderservice.entity.OrderEventHistory;
 import com.example.orderservice.entity.OrderEntity;
+import com.example.orderservice.entity.ProcessedEvent;
+import com.example.orderservice.repository.OrderEventHistoryRepository;
 import com.example.orderservice.repository.OrderRepository;
+import com.example.orderservice.repository.ProcessedEventRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OrderService {
 
     private final OrderRepository orderRepository;
     private final OrderOutboxService orderOutboxService;
+    private final ProcessedEventRepository processedEventRepository;
+    private final OrderEventHistoryRepository orderEventHistoryRepository;
 
     @Transactional
     public String createOrder(CreateOrderRequest request) {
@@ -54,28 +64,61 @@ public class OrderService {
     }
 
     @Transactional
-    public void markPaymentConfirmed(String orderId) {
-        findOrder(orderId).markPaymentConfirmed();
+    public void markPaymentConfirmed(OrderEventEnvelope event) {
+        processEvent(event, order -> order.markPaymentConfirmed());
     }
 
     @Transactional
-    public void markPaymentFailed(String orderId, String reason) {
-        findOrder(orderId).markPaymentFailed(reason);
+    public void markPaymentFailed(OrderEventEnvelope event, String reason) {
+        processEvent(event, order -> order.markPaymentFailed(reason));
     }
 
     @Transactional
-    public void markInventoryConfirmed(String orderId) {
-        findOrder(orderId).markInventoryConfirmed();
+    public void markInventoryConfirmed(OrderEventEnvelope event) {
+        processEvent(event, order -> order.markInventoryConfirmed());
     }
 
     @Transactional
-    public void markInventoryFailed(String orderId, String reason) {
-        findOrder(orderId).markInventoryFailed(reason);
+    public void markInventoryFailed(OrderEventEnvelope event, String reason) {
+        processEvent(event, order -> order.markInventoryFailed(reason));
     }
 
     @Transactional
-    public void markRefunded(String orderId, String reason) {
-        findOrder(orderId).markRefunded(reason);
+    public void markRefunded(OrderEventEnvelope event, String reason) {
+        processEvent(event, order -> order.markRefunded(reason));
+    }
+
+    @Transactional(readOnly = true)
+    public List<OrderEventResponse> getOrderEvents(String orderId) {
+        if (!orderRepository.existsById(orderId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found: " + orderId);
+        }
+
+        return orderEventHistoryRepository.findByOrderIdOrderByReceivedAtAsc(orderId)
+                .stream()
+                .map(OrderEventResponse::from)
+                .toList();
+    }
+
+    private void processEvent(OrderEventEnvelope event, java.util.function.Consumer<OrderEntity> transition) {
+        if (processedEventRepository.existsById(event.eventId())) {
+            log.info("Skipping duplicate order saga event eventId={} orderId={} type={}",
+                    event.eventId(),
+                    event.orderId(),
+                    event.eventType());
+            return;
+        }
+
+        OrderEntity order = findOrder(event.orderId());
+        transition.accept(order);
+        orderEventHistoryRepository.save(new OrderEventHistory(
+                event.eventId(),
+                event.orderId(),
+                event.eventType(),
+                event.sourceTopic(),
+                event.payload()
+        ));
+        processedEventRepository.save(new ProcessedEvent(event.eventId(), event.orderId(), event.eventType()));
     }
 
     private OrderEntity findOrder(String orderId) {
