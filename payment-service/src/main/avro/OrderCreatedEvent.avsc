@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "name": "OrderCreatedEvent",
+  "namespace": "com.example.events",
+  "fields": [
+    { "name": "orderId", "type": "string" },
+    { "name": "productName", "type": "string" },
+    { "name": "quantity", "type": "int" },
+    { "name": "amount", "type": "string" },
+    { "name": "customerEmail", "type": "string" }
+  ]
+}

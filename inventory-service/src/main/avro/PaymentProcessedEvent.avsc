@@ -1,0 +1,10 @@
+{
+  "type": "record",
+  "name": "PaymentProcessedEvent",
+  "namespace": "com.example.events",
+  "fields": [
+    { "name": "orderId", "type": "string" },
+    { "name": "paymentStatus", "type": "string" },
+    { "name": "customerEmail", "type": "string" }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "type": "record",
+  "name": "PaymentFailedEvent",
+  "namespace": "com.example.events",
+  "fields": [
+    { "name": "orderId", "type": "string" },
+    { "name": "status", "type": "string" },
+    { "name": "reason", "type": "string" },
+    { "name": "customerEmail", "type": "string" }
+  ]
+}

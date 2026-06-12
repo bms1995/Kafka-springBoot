@@ -1,0 +1,34 @@
+groups:
+  - name: microservices-alerts
+    rules:
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+
+      - alert: PaymentOutboxPublishFailures
+        expr: increase(payment_outbox_publish_failed_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Payment outbox publishing failures detected"
+
+      - alert: PaymentFailuresSpike
+        expr: increase(payment_failed_total[5m]) > 5
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Payment failures increased"
+
+      - alert: PaymentServiceHealthDown
+        expr: max_over_time(application_ready_time_seconds{application="payment-service"}[5m]) unless up{job="payment-service"} == 1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Payment service health is not ready"

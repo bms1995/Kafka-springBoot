@@ -1,0 +1,6 @@
+C:\Users\Master\Desktop\kafka-spring-microservices\notification-service\src\main\java\com\example\notificationservice\config\KafkaConfig.java
+C:\Users\Master\Desktop\kafka-spring-microservices\notification-service\src\main\java\com\example\notificationservice\NotificationServiceApplication.java
+C:\Users\Master\Desktop\kafka-spring-microservices\notification-service\target\generated-sources\avro\com\example\events\InventoryUpdatedEvent.java
+C:\Users\Master\Desktop\kafka-spring-microservices\notification-service\target\generated-sources\avro\com\example\events\PaymentFailedEvent.java
+C:\Users\Master\Desktop\kafka-spring-microservices\notification-service\target\generated-sources\avro\com\example\events\PaymentRefundedEvent.java
+C:\Users\Master\Desktop\kafka-spring-microservices\notification-service\src\main\java\com\example\notificationservice\kafka\NotificationConsumer.java

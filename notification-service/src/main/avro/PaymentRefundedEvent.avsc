@@ -1,0 +1,10 @@
+{
+  "type": "record",
+  "name": "PaymentRefundedEvent",
+  "namespace": "com.example.events",
+  "fields": [
+    { "name": "orderId", "type": "string" },
+    { "name": "status", "type": "string" },
+    { "name": "reason", "type": "string" }
+  ]
+}
