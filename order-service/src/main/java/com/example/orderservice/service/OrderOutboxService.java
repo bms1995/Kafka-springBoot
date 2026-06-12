@@ -7,6 +7,7 @@ import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.specific.SpecificRecordBase;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
@@ -16,16 +17,17 @@ import java.nio.charset.StandardCharsets;
 @RequiredArgsConstructor
 public class OrderOutboxService {
 
-    public static final String ORDER_CREATED_TOPIC = "order-created";
-
     private final OutboxEventRepository outboxEventRepository;
+
+    @Value("${app.kafka.topics.order-created:order-created}")
+    private String orderCreatedTopic;
 
     public void enqueue(String aggregateId, Object event) {
         try {
             SpecificRecordBase avroEvent = (SpecificRecordBase) event;
             outboxEventRepository.save(new OutboxEvent(
                     aggregateId,
-                    ORDER_CREATED_TOPIC,
+                    orderCreatedTopic,
                     event.getClass().getName(),
                     toAvroJson(avroEvent)
             ));

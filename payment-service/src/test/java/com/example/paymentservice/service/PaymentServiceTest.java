@@ -61,8 +61,7 @@ class PaymentServiceTest {
         ArgumentCaptor<PaymentTransaction> transactionCaptor =
                 ArgumentCaptor.forClass(PaymentTransaction.class);
 
-        verify(paymentOutboxService).enqueue(
-                org.mockito.ArgumentMatchers.eq(PaymentOutboxService.PAYMENT_PROCESSED_TOPIC),
+        verify(paymentOutboxService).enqueuePaymentProcessed(
                 org.mockito.ArgumentMatchers.eq(event.getOrderId()),
                 paymentEventCaptor.capture()
         );
@@ -86,8 +85,7 @@ class PaymentServiceTest {
 
         paymentService.processPayment(event);
 
-        verify(paymentOutboxService, never()).enqueue(
-                org.mockito.ArgumentMatchers.any(),
+        verify(paymentOutboxService, never()).enqueuePaymentProcessed(
                 org.mockito.ArgumentMatchers.any(),
                 org.mockito.ArgumentMatchers.any()
         );
@@ -111,8 +109,7 @@ class PaymentServiceTest {
         ArgumentCaptor<PaymentTransaction> transactionCaptor =
                 ArgumentCaptor.forClass(PaymentTransaction.class);
 
-        verify(paymentOutboxService).enqueue(
-                org.mockito.ArgumentMatchers.eq(PaymentOutboxService.PAYMENT_FAILED_TOPIC),
+        verify(paymentOutboxService).enqueuePaymentFailed(
                 org.mockito.ArgumentMatchers.eq(event.getOrderId()),
                 failedEventCaptor.capture()
         );
@@ -159,8 +156,7 @@ class PaymentServiceTest {
                 ArgumentCaptor.forClass(PaymentTransaction.class);
 
         verify(paymentTransactionRepository).save(transactionCaptor.capture());
-        verify(paymentOutboxService).enqueue(
-                org.mockito.ArgumentMatchers.eq(PaymentOutboxService.PAYMENT_REFUNDED_TOPIC),
+        verify(paymentOutboxService).enqueuePaymentRefunded(
                 org.mockito.ArgumentMatchers.eq(event.getOrderId()),
                 refundedEventCaptor.capture()
         );
@@ -196,8 +192,7 @@ class PaymentServiceTest {
 
         paymentService.compensatePayment(event);
 
-        verify(paymentOutboxService, never()).enqueue(
-                org.mockito.ArgumentMatchers.any(),
+        verify(paymentOutboxService, never()).enqueuePaymentRefunded(
                 org.mockito.ArgumentMatchers.any(),
                 org.mockito.ArgumentMatchers.any()
         );

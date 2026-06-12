@@ -7,6 +7,7 @@ import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.specific.SpecificRecordBase;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
@@ -21,6 +22,27 @@ public class PaymentOutboxService {
     public static final String PAYMENT_REFUNDED_TOPIC = "payment-refunded";
 
     private final OutboxEventRepository outboxEventRepository;
+
+    @Value("${app.kafka.topics.payment-processed:payment-processed}")
+    private String paymentProcessedTopic;
+
+    @Value("${app.kafka.topics.payment-failed:payment-failed}")
+    private String paymentFailedTopic;
+
+    @Value("${app.kafka.topics.payment-refunded:payment-refunded}")
+    private String paymentRefundedTopic;
+
+    public void enqueuePaymentProcessed(String aggregateId, Object event) {
+        enqueue(paymentProcessedTopic, aggregateId, event);
+    }
+
+    public void enqueuePaymentFailed(String aggregateId, Object event) {
+        enqueue(paymentFailedTopic, aggregateId, event);
+    }
+
+    public void enqueuePaymentRefunded(String aggregateId, Object event) {
+        enqueue(paymentRefundedTopic, aggregateId, event);
+    }
 
     public void enqueue(String topic, String aggregateId, Object event) {
         try {

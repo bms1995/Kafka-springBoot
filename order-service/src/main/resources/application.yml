@@ -28,6 +28,16 @@ spring:
         schema.registry.url: ${SCHEMA_REGISTRY_URL:http://localhost:8086}
         specific.avro.reader: true
 
+app:
+  kafka:
+    topics:
+      order-created: ${ORDER_CREATED_TOPIC:order-created}
+      payment-processed: ${PAYMENT_PROCESSED_TOPIC:payment-processed}
+      payment-failed: ${PAYMENT_FAILED_TOPIC:payment-failed}
+      payment-refunded: ${PAYMENT_REFUNDED_TOPIC:payment-refunded}
+      inventory-updated: ${INVENTORY_UPDATED_TOPIC:inventory-updated}
+      inventory-failed: ${INVENTORY_FAILED_TOPIC:inventory-failed}
+
 logging:
   level:
     org.apache.kafka: INFO

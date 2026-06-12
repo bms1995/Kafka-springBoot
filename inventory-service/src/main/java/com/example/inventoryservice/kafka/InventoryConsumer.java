@@ -14,7 +14,7 @@ public class InventoryConsumer {
 
     private final InventoryService inventoryService;
 
-    @KafkaListener(topics = "payment-processed", groupId = "inventory-group")
+    @KafkaListener(topics = "${app.kafka.topics.payment-processed:payment-processed}", groupId = "inventory-group")
     public void consume(PaymentProcessedEvent event) {
         log.info("Received payment-processed event: {}", event);
         inventoryService.updateInventory(event);

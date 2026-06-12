@@ -36,6 +36,13 @@ spring:
         max.in.flight.requests.per.connection: 5
 
 app:
+  kafka:
+    topics:
+      order-created: ${ORDER_CREATED_TOPIC:order-created}
+      payment-processed: ${PAYMENT_PROCESSED_TOPIC:payment-processed}
+      payment-failed: ${PAYMENT_FAILED_TOPIC:payment-failed}
+      payment-refunded: ${PAYMENT_REFUNDED_TOPIC:payment-refunded}
+      inventory-failed: ${INVENTORY_FAILED_TOPIC:inventory-failed}
   outbox:
     publish-delay-ms: 1000
 

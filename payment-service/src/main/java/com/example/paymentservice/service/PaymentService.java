@@ -64,7 +64,7 @@ public class PaymentService {
 
             transaction.markFailed(reason);
             paymentTransactionRepository.save(transaction);
-            paymentOutboxService.enqueue(PaymentOutboxService.PAYMENT_FAILED_TOPIC, event.getOrderId(), failedEvent);
+            paymentOutboxService.enqueuePaymentFailed(event.getOrderId(), failedEvent);
             processedEventRepository.save(new ProcessedEvent(event.getOrderId()));
             paymentMetrics.incrementPaymentFailed();
             log.warn("Payment failed for orderId={}", event.getOrderId());
@@ -88,7 +88,7 @@ public class PaymentService {
 
         transaction.markSuccess();
         paymentTransactionRepository.save(transaction);
-        paymentOutboxService.enqueue(PaymentOutboxService.PAYMENT_PROCESSED_TOPIC, event.getOrderId(), paymentEvent);
+        paymentOutboxService.enqueuePaymentProcessed(event.getOrderId(), paymentEvent);
         processedEventRepository.save(new ProcessedEvent(event.getOrderId()));
         paymentMetrics.incrementPaymentSucceeded();
 
@@ -129,7 +129,7 @@ public class PaymentService {
 
         transaction.markRefunded(refundedEvent.getReason());
         paymentTransactionRepository.save(transaction);
-        paymentOutboxService.enqueue(PaymentOutboxService.PAYMENT_REFUNDED_TOPIC, event.getOrderId(), refundedEvent);
+        paymentOutboxService.enqueuePaymentRefunded(event.getOrderId(), refundedEvent);
         paymentMetrics.incrementPaymentRefunded();
     }
 

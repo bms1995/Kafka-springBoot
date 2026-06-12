@@ -17,13 +17,13 @@ public class PaymentConsumer {
 
     private final PaymentService paymentService;
 
-    @KafkaListener(topics = "order-created", groupId = "payment-group")
+    @KafkaListener(topics = "${app.kafka.topics.order-created:order-created}", groupId = "payment-group")
     public void consume(OrderCreatedEvent event) {
         log.info("Received order-created event: {}", event);
         paymentService.processPayment(event);
     }
 
-    @KafkaListener(topics = "inventory-failed", groupId = "payment-compensation-group")
+    @KafkaListener(topics = "${app.kafka.topics.inventory-failed:inventory-failed}", groupId = "payment-compensation-group")
     public void consumeInventoryFailure(InventoryFailedEvent event) {
         log.info("Received inventory-failed event: {}", event);
         paymentService.compensatePayment(event);

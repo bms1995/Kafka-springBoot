@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class NotificationConsumer {
 
-    @KafkaListener(topics = "inventory-updated", groupId = "notification-group")
+    @KafkaListener(topics = "${app.kafka.topics.inventory-updated:inventory-updated}", groupId = "notification-group")
     public void consume(InventoryUpdatedEvent event) {
 
         log.info("Received inventory-updated event: {}", event);
@@ -19,7 +19,7 @@ public class NotificationConsumer {
         log.info("Sending email for orderId={}", event.getOrderId());
     }
 
-    @KafkaListener(topics = "payment-failed", groupId = "notification-payment-failed-group")
+    @KafkaListener(topics = "${app.kafka.topics.payment-failed:payment-failed}", groupId = "notification-payment-failed-group")
     public void consumePaymentFailure(PaymentFailedEvent event) {
         log.info("Received payment-failed event: {}", event);
         log.info("Sending payment failure email for orderId={} reason={}",
@@ -27,7 +27,7 @@ public class NotificationConsumer {
                 event.getReason());
     }
 
-    @KafkaListener(topics = "payment-refunded", groupId = "notification-payment-refunded-group")
+    @KafkaListener(topics = "${app.kafka.topics.payment-refunded:payment-refunded}", groupId = "notification-payment-refunded-group")
     public void consumePaymentRefund(PaymentRefundedEvent event) {
         log.info("Received payment-refunded event: {}", event);
         log.info("Sending payment refund email for orderId={} reason={}",

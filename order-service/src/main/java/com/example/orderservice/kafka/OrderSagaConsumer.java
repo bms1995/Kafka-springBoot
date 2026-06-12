@@ -24,7 +24,7 @@ public class OrderSagaConsumer {
     private final OrderService orderService;
     private final OrderEventPayloadSerializer payloadSerializer;
 
-    @KafkaListener(topics = "payment-processed", groupId = "order-saga-group")
+    @KafkaListener(topics = "${app.kafka.topics.payment-processed:payment-processed}", groupId = "order-saga-group")
     public void consumePaymentProcessed(
             PaymentProcessedEvent event,
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
@@ -35,7 +35,7 @@ public class OrderSagaConsumer {
         orderService.markPaymentConfirmed(envelope(event, event.getEventId(), event.getOrderId(), topic, partition, offset));
     }
 
-    @KafkaListener(topics = "payment-failed", groupId = "order-saga-group")
+    @KafkaListener(topics = "${app.kafka.topics.payment-failed:payment-failed}", groupId = "order-saga-group")
     public void consumePaymentFailed(
             PaymentFailedEvent event,
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
@@ -46,7 +46,7 @@ public class OrderSagaConsumer {
         orderService.markPaymentFailed(envelope(event, event.getEventId(), event.getOrderId(), topic, partition, offset), event.getReason());
     }
 
-    @KafkaListener(topics = "inventory-updated", groupId = "order-saga-group")
+    @KafkaListener(topics = "${app.kafka.topics.inventory-updated:inventory-updated}", groupId = "order-saga-group")
     public void consumeInventoryUpdated(
             InventoryUpdatedEvent event,
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
@@ -57,7 +57,7 @@ public class OrderSagaConsumer {
         orderService.markInventoryConfirmed(envelope(event, event.getEventId(), event.getOrderId(), topic, partition, offset));
     }
 
-    @KafkaListener(topics = "inventory-failed", groupId = "order-saga-group")
+    @KafkaListener(topics = "${app.kafka.topics.inventory-failed:inventory-failed}", groupId = "order-saga-group")
     public void consumeInventoryFailed(
             InventoryFailedEvent event,
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
@@ -68,7 +68,7 @@ public class OrderSagaConsumer {
         orderService.markInventoryFailed(envelope(event, event.getEventId(), event.getOrderId(), topic, partition, offset), event.getReason());
     }
 
-    @KafkaListener(topics = "payment-refunded", groupId = "order-saga-group")
+    @KafkaListener(topics = "${app.kafka.topics.payment-refunded:payment-refunded}", groupId = "order-saga-group")
     public void consumePaymentRefunded(
             PaymentRefundedEvent event,
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
