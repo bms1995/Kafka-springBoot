@@ -5,12 +5,14 @@ import com.example.events.InventoryFailedEvent;
 import com.example.paymentservice.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "app.kafka.listeners.enabled", havingValue = "true", matchIfMissing = true)
 public class PaymentConsumer {
 
     private final PaymentService paymentService;

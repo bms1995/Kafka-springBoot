@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers(disabledWithoutDocker = true)
 @SpringBootTest(properties = {
         "app.outbox.publish-delay-ms=600000",
+        "app.kafka.listeners.enabled=false",
         "spring.kafka.bootstrap-servers=localhost:19092"
 })
 class PaymentServiceIntegrationTest {
