@@ -54,6 +54,25 @@ cd order-service
 mvn spring-boot:run
 ```
 
+## Build Docker
+Chaque microservice contient un Dockerfile Java 21. Construis le jar avant l'image :
+
+```bash
+cd order-service && mvn -DskipTests package && cd ..
+docker build -t kafka-springboot/order-service:local ./order-service
+
+cd payment-service && mvn -DskipTests package && cd ..
+docker build -t kafka-springboot/payment-service:local ./payment-service
+
+cd inventory-service && mvn -DskipTests package && cd ..
+docker build -t kafka-springboot/inventory-service:local ./inventory-service
+
+cd notification-service && mvn -DskipTests package && cd ..
+docker build -t kafka-springboot/notification-service:local ./notification-service
+```
+
+La CI GitHub Actions verifie les tests Maven et le build des images Docker a chaque push/PR sur `main`.
+
 ## Tester avec PowerShell
 Succes normal :
 
