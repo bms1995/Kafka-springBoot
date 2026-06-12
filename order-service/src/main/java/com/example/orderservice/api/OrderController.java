@@ -16,4 +16,9 @@ public class OrderController {
         String orderId = orderService.createOrder(request);
         return "Order created and queued for Kafka with ID: " + orderId;
     }
+
+    @GetMapping("/{orderId}")
+    public OrderResponse getOrder(@PathVariable String orderId) {
+        return orderService.getOrder(orderId);
+    }
 }

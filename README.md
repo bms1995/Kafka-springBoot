@@ -82,6 +82,13 @@ Invoke-RestMethod -Method Post `
   -Body '{"orderId":"fail-inventory-1","productName":"MacBook Pro","quantity":1,"amount":250,"customerEmail":"client@test.com"}'
 ```
 
+Consulter l'etat materialise d'une commande :
+
+```powershell
+Invoke-RestMethod -Method Get `
+  -Uri "http://localhost:8081/api/orders/order-123"
+```
+
 Smoke test complet :
 
 ```powershell
@@ -94,12 +101,21 @@ Smoke test complet :
 3. Si paiement OK, `payment-service` publie `payment-processed`
 4. `inventory-service` consomme `payment-processed`
 5. Si inventory OK, `inventory-service` publie `inventory-updated`
-6. `notification-service` consomme `inventory-updated`
+6. `order-service` consomme les evenements payment/inventory et met a jour son read model
+7. `notification-service` consomme `inventory-updated`
 
 Compensations :
 - paiement refuse : `payment-failed`
 - inventory indisponible : `inventory-failed`
 - compensation paiement : `payment-refunded`
+
+Statuts de commande materialises par `order-service` :
+- `CREATED`
+- `PAYMENT_CONFIRMED`
+- `PAYMENT_FAILED`
+- `INVENTORY_CONFIRMED`
+- `INVENTORY_FAILED`
+- `REFUNDED`
 
 ## Anti Double Paiement
 `payment-service` combine :
@@ -157,6 +173,7 @@ Les consommateurs critiques utilisent un `DefaultErrorHandler` Spring Kafka :
 - logs de chaque tentative avec topic, cle et payload
 
 Services couverts :
+- `order-service`
 - `payment-service`
 - `inventory-service`
 - `notification-service`

@@ -21,6 +21,12 @@ spring:
       value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
       properties:
         schema.registry.url: ${SCHEMA_REGISTRY_URL:http://localhost:8086}
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
+      properties:
+        schema.registry.url: ${SCHEMA_REGISTRY_URL:http://localhost:8086}
+        specific.avro.reader: true
 
 logging:
   level:

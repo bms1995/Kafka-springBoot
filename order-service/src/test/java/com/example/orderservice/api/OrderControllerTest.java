@@ -1,5 +1,6 @@
 package com.example.orderservice.api;
 
+import com.example.orderservice.entity.OrderStatus;
 import com.example.orderservice.service.OrderService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -7,6 +8,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -51,5 +53,26 @@ class OrderControllerTest {
         assertThat(response).isEqualTo(
                 "Order created and queued for Kafka with ID: generated-order-id"
         );
+    }
+
+    @Test
+    void getOrderReturnsOrderReadModel() {
+        OrderController controller = new OrderController(orderService);
+        OrderResponse orderResponse = new OrderResponse(
+                "order-1",
+                "Laptop",
+                2,
+                BigDecimal.valueOf(349.99),
+                "customer@example.com",
+                OrderStatus.INVENTORY_CONFIRMED,
+                null,
+                Instant.parse("2026-06-12T10:00:00Z"),
+                Instant.parse("2026-06-12T10:01:00Z")
+        );
+        when(orderService.getOrder("order-1")).thenReturn(orderResponse);
+
+        OrderResponse response = controller.getOrder("order-1");
+
+        assertThat(response).isEqualTo(orderResponse);
     }
 }

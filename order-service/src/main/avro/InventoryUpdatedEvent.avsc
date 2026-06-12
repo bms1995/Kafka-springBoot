@@ -1,0 +1,9 @@
+{
+  "type": "record",
+  "name": "InventoryUpdatedEvent",
+  "namespace": "com.example.events",
+  "fields": [
+    { "name": "orderId", "type": "string" },
+    { "name": "status", "type": "string" }
+  ]
+}
