@@ -1,6 +1,7 @@
 # Kafka Spring Microservices
 
 Projet local avec :
+- `api-gateway`
 - `order-service`
 - `payment-service`
 - `inventory-service`
@@ -33,6 +34,7 @@ docker compose up -d --build
 ```
 
 URLs utiles :
+- API Gateway : http://localhost:8080
 - Kafka UI : http://localhost:8085
 - Schema Registry : http://localhost:8086
 - Prometheus : http://localhost:9090
@@ -67,10 +69,20 @@ cd order-service
 mvn spring-boot:run
 ```
 
+Gateway local :
+
+```bash
+cd api-gateway
+mvn spring-boot:run
+```
+
 ## Build Docker
 Chaque microservice contient un Dockerfile Java 21. Construis le jar avant l'image :
 
 ```bash
+cd api-gateway && mvn -DskipTests package && cd ..
+docker build -t kafka-springboot/api-gateway:local ./api-gateway
+
 cd order-service && mvn -DskipTests package && cd ..
 docker build -t kafka-springboot/order-service:local ./order-service
 
@@ -91,7 +103,7 @@ Succes normal :
 
 ```powershell
 Invoke-RestMethod -Method Post `
-  -Uri "http://localhost:8081/api/orders" `
+  -Uri "http://localhost:8080/api/orders" `
   -ContentType "application/json" `
   -Body '{"orderId":"order-123","productName":"MacBook Pro","quantity":1,"amount":250,"customerEmail":"client@test.com"}'
 ```
@@ -100,7 +112,7 @@ Echec paiement :
 
 ```powershell
 Invoke-RestMethod -Method Post `
-  -Uri "http://localhost:8081/api/orders" `
+  -Uri "http://localhost:8080/api/orders" `
   -ContentType "application/json" `
   -Body '{"orderId":"order-fail-payment","productName":"MacBook Pro","quantity":1,"amount":999,"customerEmail":"client@test.com"}'
 ```
@@ -109,7 +121,7 @@ Echec inventory + compensation :
 
 ```powershell
 Invoke-RestMethod -Method Post `
-  -Uri "http://localhost:8081/api/orders" `
+  -Uri "http://localhost:8080/api/orders" `
   -ContentType "application/json" `
   -Body '{"orderId":"fail-inventory-1","productName":"MacBook Pro","quantity":1,"amount":250,"customerEmail":"client@test.com"}'
 ```
@@ -118,15 +130,25 @@ Consulter l'etat materialise d'une commande :
 
 ```powershell
 Invoke-RestMethod -Method Get `
-  -Uri "http://localhost:8081/api/orders/order-123"
+  -Uri "http://localhost:8080/api/orders/order-123"
 ```
 
 Consulter la timeline d'evenements d'une commande :
 
 ```powershell
 Invoke-RestMethod -Method Get `
-  -Uri "http://localhost:8081/api/orders/order-123/events"
+  -Uri "http://localhost:8080/api/orders/order-123/events"
 ```
+
+## API Gateway
+`api-gateway` est le point d'entree HTTP unique :
+- port local : `8080`
+- route `/api/orders/**` vers `order-service`
+- route `/api/payments/**` vers `payment-service`
+- route `/api/inventory/**` vers `inventory-service`
+- route `/api/notifications/**` vers `notification-service`
+- ajoute ou propage le header `X-Correlation-Id`
+- expose `/actuator/prometheus`
 
 Smoke test complet :
 
@@ -209,6 +231,7 @@ Exemple de chaine :
 
 ## Observabilite
 Health :
+- api-gateway : http://localhost:8080/actuator/health
 - order-service : http://localhost:8081/actuator/health
 - payment-service : http://localhost:8082/actuator/health
 - notification-service : http://localhost:8083/actuator/health

@@ -138,6 +138,34 @@ services:
       schema-registry:
         condition: service_healthy
 
+  api-gateway:
+    build:
+      context: ./api-gateway
+    image: kafka-springboot/api-gateway:local
+    container_name: api-gateway
+    environment:
+      ORDER_SERVICE_URL: http://order-service:8081
+      PAYMENT_SERVICE_URL: http://payment-service:8082
+      NOTIFICATION_SERVICE_URL: http://notification-service:8083
+      INVENTORY_SERVICE_URL: http://inventory-service:8084
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health/readiness >/dev/null"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 45s
+    depends_on:
+      order-service:
+        condition: service_healthy
+      payment-service:
+        condition: service_healthy
+      notification-service:
+        condition: service_healthy
+      inventory-service:
+        condition: service_healthy
+
   payment-service:
     build:
       context: ./payment-service
