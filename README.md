@@ -20,6 +20,18 @@ Projet local avec :
 docker compose up -d
 ```
 
+Cette commande peut aussi lancer les 4 microservices si les jars ont ete packages avant le build Docker.
+
+Build des jars puis demarrage complet :
+
+```bash
+cd order-service && mvn -DskipTests package && cd ..
+cd payment-service && mvn -DskipTests package && cd ..
+cd inventory-service && mvn -DskipTests package && cd ..
+cd notification-service && mvn -DskipTests package && cd ..
+docker compose up -d --build
+```
+
 URLs utiles :
 - Kafka UI : http://localhost:8085
 - Schema Registry : http://localhost:8086

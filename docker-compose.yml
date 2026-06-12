@@ -53,6 +53,74 @@ services:
       - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
       - ALLOW_PLAINTEXT_LISTENER=yes
 
+  order-service:
+    build:
+      context: ./order-service
+    image: kafka-springboot/order-service:local
+    container_name: order-service
+    environment:
+      ORDER_DB_URL: jdbc:postgresql://postgres-order:5432/${ORDER_DB_NAME:-orderdb}
+      ORDER_DB_USERNAME: ${ORDER_DB_USERNAME:-myuser}
+      ORDER_DB_PASSWORD: ${ORDER_DB_PASSWORD:-mypassword}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SCHEMA_REGISTRY_URL: http://schema-registry:8081
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres-order
+      - kafka
+      - schema-registry
+
+  payment-service:
+    build:
+      context: ./payment-service
+    image: kafka-springboot/payment-service:local
+    container_name: payment-service
+    environment:
+      PAYMENT_DB_URL: jdbc:postgresql://postgres:5432/${PAYMENT_DB_NAME:-paymentdb}
+      PAYMENT_DB_USERNAME: ${PAYMENT_DB_USERNAME:-myuser}
+      PAYMENT_DB_PASSWORD: ${PAYMENT_DB_PASSWORD:-mypassword}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SCHEMA_REGISTRY_URL: http://schema-registry:8081
+    ports:
+      - "8082:8082"
+    depends_on:
+      - postgres
+      - kafka
+      - schema-registry
+
+  notification-service:
+    build:
+      context: ./notification-service
+    image: kafka-springboot/notification-service:local
+    container_name: notification-service
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SCHEMA_REGISTRY_URL: http://schema-registry:8081
+    ports:
+      - "8083:8083"
+    depends_on:
+      - kafka
+      - schema-registry
+
+  inventory-service:
+    build:
+      context: ./inventory-service
+    image: kafka-springboot/inventory-service:local
+    container_name: inventory-service
+    environment:
+      INVENTORY_DB_URL: jdbc:postgresql://postgres-inventory:5432/${INVENTORY_DB_NAME:-inventorydb}
+      INVENTORY_DB_USERNAME: ${INVENTORY_DB_USERNAME:-myuser}
+      INVENTORY_DB_PASSWORD: ${INVENTORY_DB_PASSWORD:-mypassword}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SCHEMA_REGISTRY_URL: http://schema-registry:8081
+    ports:
+      - "8084:8084"
+    depends_on:
+      - postgres-inventory
+      - kafka
+      - schema-registry
+
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: kafka-ui1
