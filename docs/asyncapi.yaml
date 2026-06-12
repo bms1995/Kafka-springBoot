@@ -1,0 +1,277 @@
+asyncapi: 3.0.0
+info:
+  title: Kafka Spring Microservices Events
+  version: 1.0.0
+  description: Event-driven contracts for the local order, payment, inventory, and notification services.
+
+defaultContentType: application/vnd.apache.avro+binary
+
+servers:
+  localKafka:
+    host: localhost:29092
+    protocol: kafka
+    description: Local Docker Kafka broker exposed to the host.
+
+channels:
+  order-created:
+    address: order-created
+    messages:
+      OrderCreatedEvent:
+        $ref: "#/components/messages/OrderCreatedEvent"
+  payment-processed:
+    address: payment-processed
+    messages:
+      PaymentProcessedEvent:
+        $ref: "#/components/messages/PaymentProcessedEvent"
+  payment-failed:
+    address: payment-failed
+    messages:
+      PaymentFailedEvent:
+        $ref: "#/components/messages/PaymentFailedEvent"
+  payment-refunded:
+    address: payment-refunded
+    messages:
+      PaymentRefundedEvent:
+        $ref: "#/components/messages/PaymentRefundedEvent"
+  inventory-updated:
+    address: inventory-updated
+    messages:
+      InventoryUpdatedEvent:
+        $ref: "#/components/messages/InventoryUpdatedEvent"
+  inventory-failed:
+    address: inventory-failed
+    messages:
+      InventoryFailedEvent:
+        $ref: "#/components/messages/InventoryFailedEvent"
+
+operations:
+  orderServicePublishesOrderCreated:
+    action: send
+    channel:
+      $ref: "#/channels/order-created"
+    messages:
+      - $ref: "#/channels/order-created/messages/OrderCreatedEvent"
+  paymentServiceConsumesOrderCreated:
+    action: receive
+    channel:
+      $ref: "#/channels/order-created"
+    messages:
+      - $ref: "#/channels/order-created/messages/OrderCreatedEvent"
+  paymentServicePublishesPaymentProcessed:
+    action: send
+    channel:
+      $ref: "#/channels/payment-processed"
+    messages:
+      - $ref: "#/channels/payment-processed/messages/PaymentProcessedEvent"
+  paymentServicePublishesPaymentFailed:
+    action: send
+    channel:
+      $ref: "#/channels/payment-failed"
+    messages:
+      - $ref: "#/channels/payment-failed/messages/PaymentFailedEvent"
+  paymentServicePublishesPaymentRefunded:
+    action: send
+    channel:
+      $ref: "#/channels/payment-refunded"
+    messages:
+      - $ref: "#/channels/payment-refunded/messages/PaymentRefundedEvent"
+  inventoryServiceConsumesPaymentProcessed:
+    action: receive
+    channel:
+      $ref: "#/channels/payment-processed"
+    messages:
+      - $ref: "#/channels/payment-processed/messages/PaymentProcessedEvent"
+  inventoryServicePublishesInventoryUpdated:
+    action: send
+    channel:
+      $ref: "#/channels/inventory-updated"
+    messages:
+      - $ref: "#/channels/inventory-updated/messages/InventoryUpdatedEvent"
+  inventoryServicePublishesInventoryFailed:
+    action: send
+    channel:
+      $ref: "#/channels/inventory-failed"
+    messages:
+      - $ref: "#/channels/inventory-failed/messages/InventoryFailedEvent"
+  orderServiceConsumesPaymentProcessed:
+    action: receive
+    channel:
+      $ref: "#/channels/payment-processed"
+    messages:
+      - $ref: "#/channels/payment-processed/messages/PaymentProcessedEvent"
+  orderServiceConsumesPaymentFailed:
+    action: receive
+    channel:
+      $ref: "#/channels/payment-failed"
+    messages:
+      - $ref: "#/channels/payment-failed/messages/PaymentFailedEvent"
+  orderServiceConsumesPaymentRefunded:
+    action: receive
+    channel:
+      $ref: "#/channels/payment-refunded"
+    messages:
+      - $ref: "#/channels/payment-refunded/messages/PaymentRefundedEvent"
+  orderServiceConsumesInventoryUpdated:
+    action: receive
+    channel:
+      $ref: "#/channels/inventory-updated"
+    messages:
+      - $ref: "#/channels/inventory-updated/messages/InventoryUpdatedEvent"
+  orderServiceConsumesInventoryFailed:
+    action: receive
+    channel:
+      $ref: "#/channels/inventory-failed"
+    messages:
+      - $ref: "#/channels/inventory-failed/messages/InventoryFailedEvent"
+  notificationServiceConsumesInventoryUpdated:
+    action: receive
+    channel:
+      $ref: "#/channels/inventory-updated"
+    messages:
+      - $ref: "#/channels/inventory-updated/messages/InventoryUpdatedEvent"
+  notificationServiceConsumesPaymentFailed:
+    action: receive
+    channel:
+      $ref: "#/channels/payment-failed"
+    messages:
+      - $ref: "#/channels/payment-failed/messages/PaymentFailedEvent"
+  notificationServiceConsumesPaymentRefunded:
+    action: receive
+    channel:
+      $ref: "#/channels/payment-refunded"
+    messages:
+      - $ref: "#/channels/payment-refunded/messages/PaymentRefundedEvent"
+
+components:
+  messages:
+    OrderCreatedEvent:
+      name: OrderCreatedEvent
+      title: Order created
+      payload:
+        $ref: "#/components/schemas/OrderCreatedEvent"
+    PaymentProcessedEvent:
+      name: PaymentProcessedEvent
+      title: Payment processed
+      payload:
+        $ref: "#/components/schemas/PaymentProcessedEvent"
+    PaymentFailedEvent:
+      name: PaymentFailedEvent
+      title: Payment failed
+      payload:
+        $ref: "#/components/schemas/PaymentFailedEvent"
+    PaymentRefundedEvent:
+      name: PaymentRefundedEvent
+      title: Payment refunded
+      payload:
+        $ref: "#/components/schemas/PaymentRefundedEvent"
+    InventoryUpdatedEvent:
+      name: InventoryUpdatedEvent
+      title: Inventory updated
+      payload:
+        $ref: "#/components/schemas/InventoryUpdatedEvent"
+    InventoryFailedEvent:
+      name: InventoryFailedEvent
+      title: Inventory failed
+      payload:
+        $ref: "#/components/schemas/InventoryFailedEvent"
+
+  schemas:
+    EventMetadata:
+      type: object
+      required:
+        - eventId
+        - correlationId
+        - causationId
+        - occurredAt
+        - producer
+        - schemaVersion
+      properties:
+        eventId:
+          type: string
+        correlationId:
+          type: string
+        causationId:
+          type: string
+        occurredAt:
+          type: string
+          format: date-time
+        producer:
+          type: string
+        schemaVersion:
+          type: string
+    OrderCreatedEvent:
+      allOf:
+        - $ref: "#/components/schemas/EventMetadata"
+        - type: object
+          required: [orderId, productName, quantity, amount, customerEmail]
+          properties:
+            orderId:
+              type: string
+            productName:
+              type: string
+            quantity:
+              type: integer
+            amount:
+              type: string
+            customerEmail:
+              type: string
+    PaymentProcessedEvent:
+      allOf:
+        - $ref: "#/components/schemas/EventMetadata"
+        - type: object
+          required: [orderId, paymentStatus, customerEmail]
+          properties:
+            orderId:
+              type: string
+            paymentStatus:
+              type: string
+            customerEmail:
+              type: string
+    PaymentFailedEvent:
+      allOf:
+        - $ref: "#/components/schemas/EventMetadata"
+        - type: object
+          required: [orderId, status, reason, customerEmail]
+          properties:
+            orderId:
+              type: string
+            status:
+              type: string
+            reason:
+              type: string
+            customerEmail:
+              type: string
+    PaymentRefundedEvent:
+      allOf:
+        - $ref: "#/components/schemas/EventMetadata"
+        - type: object
+          required: [orderId, status, reason]
+          properties:
+            orderId:
+              type: string
+            status:
+              type: string
+            reason:
+              type: string
+    InventoryUpdatedEvent:
+      allOf:
+        - $ref: "#/components/schemas/EventMetadata"
+        - type: object
+          required: [orderId, status]
+          properties:
+            orderId:
+              type: string
+            status:
+              type: string
+    InventoryFailedEvent:
+      allOf:
+        - $ref: "#/components/schemas/EventMetadata"
+        - type: object
+          required: [orderId, status, reason]
+          properties:
+            orderId:
+              type: string
+            status:
+              type: string
+            reason:
+              type: string

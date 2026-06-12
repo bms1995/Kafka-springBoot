@@ -2,6 +2,8 @@
 
 This catalog is the source of truth for the local event-driven contracts used by the services.
 
+Machine-readable contract documentation is available in `docs/asyncapi.yaml`.
+
 ## Topic Ownership
 
 | Topic | Event | Producer | Consumers | DLQ |

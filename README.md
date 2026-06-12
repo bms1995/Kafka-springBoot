@@ -191,6 +191,10 @@ Les evenements Kafka utilisent Avro :
 - namespace partage : `com.example.events`
 - Schema Registry : `SCHEMA_REGISTRY_URL`
 
+Documentation des contrats :
+- catalogue humain : `docs/event-catalog.md`
+- specification AsyncAPI : `docs/asyncapi.yaml`
+
 ## Event Metadata
 Les evenements de saga portent des metadonnees de tracing :
 - `eventId` : identifiant unique de l'evenement
