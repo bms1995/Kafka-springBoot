@@ -32,3 +32,19 @@ groups:
           severity: critical
         annotations:
           summary: "Payment service health is not ready"
+
+      - alert: KafkaConsumerLagHigh
+        expr: sum by (consumergroup, topic) (kafka_consumergroup_lag) > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Kafka consumer lag is high for {{ $labels.consumergroup }} on {{ $labels.topic }}"
+
+      - alert: KafkaExporterDown
+        expr: up{job="kafka-exporter"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Kafka exporter is down"

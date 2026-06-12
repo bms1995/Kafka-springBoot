@@ -103,6 +103,10 @@ services:
             --topic "$$topic" \
             --partitions 3 \
             --replication-factor 1
+          "$$KAFKA_TOPICS" --bootstrap-server kafka:9092 \
+            --alter \
+            --topic "$$topic" \
+            --partitions 3 || true
         done
 
   order-service:
@@ -232,6 +236,19 @@ services:
         condition: service_completed_successfully
       schema-registry:
         condition: service_healthy
+
+  kafka-exporter:
+    image: danielqsj/kafka-exporter:v1.8.0
+    container_name: kafka-exporter
+    command:
+      - --kafka.server=kafka:9092
+    ports:
+      - "9308:9308"
+    depends_on:
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
 
   schema-registry:
     image: confluentinc/cp-schema-registry:7.6.1

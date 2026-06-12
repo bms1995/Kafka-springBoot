@@ -38,6 +38,7 @@ URLs utiles :
 - Prometheus : http://localhost:9090
 - Grafana : http://localhost:3000
 - PgAdmin : http://localhost:5050
+- Kafka Exporter metrics : http://localhost:9308/metrics
 
 Grafana local :
 - login : `admin`
@@ -223,6 +224,11 @@ Metrics :
 
 Alertes Prometheus :
 - `monitoring/alerts.yml`
+- service down
+- Kafka exporter down
+- Kafka consumer lag high
+- outbox publish failures
+- payment failures spike
 
 ## Resilience Kafka
 Les consommateurs critiques utilisent un `DefaultErrorHandler` Spring Kafka :
