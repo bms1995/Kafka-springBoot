@@ -104,6 +104,7 @@ Succes normal :
 ```powershell
 Invoke-RestMethod -Method Post `
   -Uri "http://localhost:8080/api/orders" `
+  -Headers @{"X-API-Key"="local-dev-key"} `
   -ContentType "application/json" `
   -Body '{"orderId":"order-123","productName":"MacBook Pro","quantity":1,"amount":250,"customerEmail":"client@test.com"}'
 ```
@@ -113,6 +114,7 @@ Echec paiement :
 ```powershell
 Invoke-RestMethod -Method Post `
   -Uri "http://localhost:8080/api/orders" `
+  -Headers @{"X-API-Key"="local-dev-key"} `
   -ContentType "application/json" `
   -Body '{"orderId":"order-fail-payment","productName":"MacBook Pro","quantity":1,"amount":999,"customerEmail":"client@test.com"}'
 ```
@@ -122,6 +124,7 @@ Echec inventory + compensation :
 ```powershell
 Invoke-RestMethod -Method Post `
   -Uri "http://localhost:8080/api/orders" `
+  -Headers @{"X-API-Key"="local-dev-key"} `
   -ContentType "application/json" `
   -Body '{"orderId":"fail-inventory-1","productName":"MacBook Pro","quantity":1,"amount":250,"customerEmail":"client@test.com"}'
 ```
@@ -130,14 +133,16 @@ Consulter l'etat materialise d'une commande :
 
 ```powershell
 Invoke-RestMethod -Method Get `
-  -Uri "http://localhost:8080/api/orders/order-123"
+  -Uri "http://localhost:8080/api/orders/order-123" `
+  -Headers @{"X-API-Key"="local-dev-key"}
 ```
 
 Consulter la timeline d'evenements d'une commande :
 
 ```powershell
 Invoke-RestMethod -Method Get `
-  -Uri "http://localhost:8080/api/orders/order-123/events"
+  -Uri "http://localhost:8080/api/orders/order-123/events" `
+  -Headers @{"X-API-Key"="local-dev-key"}
 ```
 
 ## API Gateway
@@ -148,8 +153,14 @@ Invoke-RestMethod -Method Get `
 - route `/api/inventory/**` vers `inventory-service`
 - route `/api/notifications/**` vers `notification-service`
 - ajoute ou propage le header `X-Correlation-Id`
+- protege les routes `/api/**` avec `X-API-Key`
 - applique un rate limit par client, configurable via `API_GATEWAY_RATE_LIMIT_*`
 - expose `/actuator/prometheus`
+
+API key locale par defaut :
+- `API_GATEWAY_API_KEY_ENABLED=true`
+- `API_GATEWAY_API_KEY_HEADER=X-API-Key`
+- `API_GATEWAY_API_KEY=local-dev-key`
 
 Rate limit local par defaut :
 - `API_GATEWAY_RATE_LIMIT_ENABLED=true`
