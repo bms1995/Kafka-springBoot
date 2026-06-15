@@ -7,6 +7,7 @@
 ![Docker](https://img.shields.io/badge/Docker-compose-blue)
 ![Kubernetes](https://img.shields.io/badge/Kubernetes-manifests-326ce5)
 ![Resilience4j](https://img.shields.io/badge/Resilience4j-circuit--breaker-lightgrey)
+![OAuth2](https://img.shields.io/badge/OAuth2-JWT-purple)
 
 Projet local avec :
 - `api-gateway`
@@ -20,6 +21,7 @@ Projet local avec :
 - Saga, Outbox, Avro, Flyway, anti double paiement
 - Resilience4j circuit breaker sur l'API Gateway
 - manifests Kubernetes pour les microservices applicatifs
+- support JWT/OAuth2 optionnel sur l'API Gateway
 
 ## Prerequis
 - Java 21
@@ -67,6 +69,7 @@ flowchart LR
 Responsabilites :
 - `api-gateway` : point d'entree HTTP, routage, API key, correlation id, rate limiting
 - `api-gateway` protege aussi les routes avec Resilience4j circuit breaker et fallback HTTP 503
+- `api-gateway` accepte `X-API-Key` en local et `Authorization: Bearer <jwt>` quand JWT est active
 - `order-service` : creation des commandes, read model, outbox, historique des evenements Saga
 - `payment-service` : traitement paiement, idempotence anti double paiement, compensation remboursement
 - `inventory-service` : reservation ou refus inventaire
@@ -321,6 +324,21 @@ API key locale par defaut :
 - `API_GATEWAY_API_KEY_ENABLED=true`
 - `API_GATEWAY_API_KEY_HEADER=X-API-Key`
 - `API_GATEWAY_API_KEY=local-dev-key`
+
+JWT/OAuth2 optionnel :
+- `API_GATEWAY_JWT_ENABLED=false`
+- `API_GATEWAY_JWT_ISSUER_URI=`
+- si active, le gateway accepte `Authorization: Bearer <jwt>` en plus de l'API key
+- `API_GATEWAY_JWT_ISSUER_URI` doit pointer vers un issuer OIDC comme Keycloak, Auth0 ou Okta
+
+Exemple avec Keycloak local :
+
+```powershell
+$token = "eyJ..."
+Invoke-RestMethod -Method Get `
+  -Uri "http://localhost:8080/api/orders/order-123" `
+  -Headers @{ "Authorization" = "Bearer $token" }
+```
 
 Rate limit local par defaut :
 - `API_GATEWAY_RATE_LIMIT_ENABLED=true`

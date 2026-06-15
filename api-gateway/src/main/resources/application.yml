@@ -84,6 +84,9 @@ app:
       enabled: ${API_GATEWAY_API_KEY_ENABLED:true}
       header-name: ${API_GATEWAY_API_KEY_HEADER:X-API-Key}
       value: ${API_GATEWAY_API_KEY:local-dev-key}
+    jwt:
+      enabled: ${API_GATEWAY_JWT_ENABLED:false}
+      issuer-uri: ${API_GATEWAY_JWT_ISSUER_URI:}
   rate-limit:
     enabled: ${API_GATEWAY_RATE_LIMIT_ENABLED:true}
     requests-per-window: ${API_GATEWAY_RATE_LIMIT_REQUESTS:60}

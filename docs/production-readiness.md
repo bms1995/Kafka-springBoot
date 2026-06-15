@@ -14,6 +14,7 @@ Ce projet demontre une architecture microservices event-driven en local. Pour se
 - Dead-letter topics Kafka
 - Retry Kafka cote consommateurs
 - API Gateway avec API key, correlation id et rate limiting
+- Support JWT/OAuth2 optionnel sur l'API Gateway
 - Circuit breaker Resilience4j sur les routes de l'API Gateway
 - Metrics Prometheus et visualisation Grafana
 - Tracing distribue OTEL vers Jaeger
@@ -22,7 +23,7 @@ Ce projet demontre une architecture microservices event-driven en local. Pour se
 - Manifests Kubernetes de base pour les microservices applicatifs
 
 ## Securite
-- Remplacer l'API key locale par OAuth2/OIDC ou JWT
+- Remplacer progressivement l'API key locale par OAuth2/OIDC ou JWT
 - Activer HTTPS/TLS entre clients et gateway
 - Stocker les secrets dans un secret manager, pas dans des variables locales simples
 - Ajouter une rotation des secrets
