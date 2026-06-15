@@ -264,6 +264,34 @@ docker build -t kafka-springboot/notification-service:local ./notification-servi
 
 La CI GitHub Actions verifie les tests Maven et le build des images Docker a chaque push/PR sur `main`.
 Elle execute aussi un scan Trivy sur le repository pour les vulnerabilites, secrets et mauvaises configurations.
+Sur `main`, elle publie aussi les images dans GitHub Container Registry :
+
+- `ghcr.io/bms1995/kafka-springboot/api-gateway`
+- `ghcr.io/bms1995/kafka-springboot/order-service`
+- `ghcr.io/bms1995/kafka-springboot/payment-service`
+- `ghcr.io/bms1995/kafka-springboot/inventory-service`
+- `ghcr.io/bms1995/kafka-springboot/notification-service`
+
+## Staging GitHub Actions
+Configurer le secret Kubernetes staging :
+
+```powershell
+.\scripts\setup-staging-secret.ps1
+```
+
+Verifier les images GHCR publiees :
+
+```powershell
+.\scripts\check-ghcr-images.ps1
+```
+
+Declencher un deploiement staging :
+
+```powershell
+.\scripts\deploy-staging.ps1 -ImageTag latest
+```
+
+Pour deployer une version exacte, utiliser le SHA du commit comme `ImageTag`.
 
 ## Tester avec PowerShell
 Succes normal :

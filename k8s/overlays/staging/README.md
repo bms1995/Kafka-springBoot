@@ -19,3 +19,10 @@ base64 -w0 ~/.kube/config
 ```
 
 Puis lancer le workflow avec `image_tag=latest` ou avec le SHA du commit publie par la CI.
+
+Depuis PowerShell, les scripts du repository font ces operations :
+
+```powershell
+.\scripts\setup-staging-secret.ps1
+.\scripts\deploy-staging.ps1 -ImageTag latest
+```
