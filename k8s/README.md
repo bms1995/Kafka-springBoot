@@ -43,6 +43,7 @@ Invoke-RestMethod -Method Post `
 - Requests/limits CPU et memoire
 - Gateway expose en `LoadBalancer`
 - Autoscaling horizontal avec HPA de 2 a 5 replicas par service
+- NetworkPolicy pour limiter le trafic entrant vers les services
 
 ## A faire pour une vraie production
 
@@ -50,5 +51,4 @@ Invoke-RestMethod -Method Post `
 - Utiliser un secret manager externe
 - Ajouter Ingress avec TLS
 - Ajouter PodDisruptionBudget
-- Ajouter NetworkPolicy
 - Ajouter ServiceMonitor Prometheus Operator

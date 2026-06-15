@@ -10,3 +10,4 @@ resources:
   - inventory-service.yaml
   - notification-service.yaml
   - hpa.yaml
+  - network-policy.yaml

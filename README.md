@@ -22,6 +22,7 @@ Projet local avec :
 - Resilience4j circuit breaker sur l'API Gateway
 - manifests Kubernetes pour les microservices applicatifs
 - HPA Kubernetes pour autoscaling horizontal
+- NetworkPolicy Kubernetes pour limiter le trafic entre pods
 - support JWT/OAuth2 optionnel sur l'API Gateway
 
 ## Prerequis
