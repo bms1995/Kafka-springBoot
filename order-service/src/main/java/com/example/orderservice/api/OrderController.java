@@ -1,6 +1,7 @@
 package com.example.orderservice.api;
 
 import com.example.orderservice.service.OrderService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,7 +15,7 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping
-    public String createOrder(@RequestBody CreateOrderRequest request) {
+    public String createOrder(@Valid @RequestBody CreateOrderRequest request) {
         String orderId = orderService.createOrder(request);
         return "Order created and queued for Kafka with ID: " + orderId;
     }
