@@ -387,6 +387,7 @@ Les evenements Kafka utilisent Avro :
 Documentation des contrats :
 - catalogue humain : `docs/event-catalog.md`
 - specification AsyncAPI : `docs/asyncapi.yaml`
+- roadmap production : `docs/production-readiness.md`
 
 ## Event Metadata
 Les evenements de saga portent des metadonnees de tracing :
