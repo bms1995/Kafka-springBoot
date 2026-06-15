@@ -21,6 +21,7 @@
         <confluent.version>7.6.1</confluent.version>
         <avro.version>1.11.4</avro.version>
         <kafka-clients.version>3.9.2</kafka-clients.version>
+        <spring-kafka.version>3.3.16</spring-kafka.version>
     </properties>
 
     <repositories>
@@ -42,6 +43,7 @@
         <dependency>
             <groupId>org.springframework.kafka</groupId>
             <artifactId>spring-kafka</artifactId>
+            <version>${spring-kafka.version}</version>
         </dependency>
         <dependency>
             <groupId>io.confluent</groupId>
@@ -71,6 +73,7 @@
         <dependency>
             <groupId>org.springframework.kafka</groupId>
             <artifactId>spring-kafka-test</artifactId>
+            <version>${spring-kafka.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
