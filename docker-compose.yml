@@ -120,6 +120,7 @@ services:
       ORDER_DB_PASSWORD: ${ORDER_DB_PASSWORD:-mypassword}
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      OTEL_TRACING_ENDPOINT: http://otel-collector:4318/v1/traces
     ports:
       - "8081:8081"
     healthcheck:
@@ -154,6 +155,7 @@ services:
       API_GATEWAY_RATE_LIMIT_ENABLED: ${API_GATEWAY_RATE_LIMIT_ENABLED:-true}
       API_GATEWAY_RATE_LIMIT_REQUESTS: ${API_GATEWAY_RATE_LIMIT_REQUESTS:-60}
       API_GATEWAY_RATE_LIMIT_WINDOW: ${API_GATEWAY_RATE_LIMIT_WINDOW:-1m}
+      OTEL_TRACING_ENDPOINT: http://otel-collector:4318/v1/traces
     ports:
       - "8080:8080"
     healthcheck:
@@ -183,6 +185,7 @@ services:
       PAYMENT_DB_PASSWORD: ${PAYMENT_DB_PASSWORD:-mypassword}
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      OTEL_TRACING_ENDPOINT: http://otel-collector:4318/v1/traces
     ports:
       - "8082:8082"
     healthcheck:
@@ -209,6 +212,7 @@ services:
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      OTEL_TRACING_ENDPOINT: http://otel-collector:4318/v1/traces
     ports:
       - "8083:8083"
     healthcheck:
@@ -236,6 +240,7 @@ services:
       INVENTORY_DB_PASSWORD: ${INVENTORY_DB_PASSWORD:-mypassword}
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      OTEL_TRACING_ENDPOINT: http://otel-collector:4318/v1/traces
     ports:
       - "8084:8084"
     healthcheck:
@@ -326,6 +331,26 @@ services:
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.57
+    container_name: jaeger
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686"
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.102.1
+    container_name: otel-collector
+    command: ["--config=/etc/otelcol-contrib/config.yml"]
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+    volumes:
+      - ./monitoring/otel-collector.yml:/etc/otelcol-contrib/config.yml:ro
+    depends_on:
+      - jaeger
 
   grafana:
     image: grafana/grafana:11.1.0

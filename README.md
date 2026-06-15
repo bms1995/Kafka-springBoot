@@ -41,6 +41,7 @@ URLs utiles :
 - Grafana : http://localhost:3000
 - PgAdmin : http://localhost:5050
 - Kafka Exporter metrics : http://localhost:9308/metrics
+- Jaeger tracing : http://localhost:16686
 
 Grafana local :
 - login : `admin`
@@ -273,6 +274,12 @@ Alertes Prometheus :
 - Kafka consumer lag high
 - outbox publish failures
 - payment failures spike
+
+Tracing distribue :
+- les services exportent les traces en OTLP HTTP vers `OTEL_TRACING_ENDPOINT`
+- Docker Compose configure `OTEL_TRACING_ENDPOINT=http://otel-collector:4318/v1/traces`
+- `otel-collector` exporte ensuite vers Jaeger
+- UI Jaeger : http://localhost:16686
 
 ## Resilience Kafka
 Les consommateurs critiques utilisent un `DefaultErrorHandler` Spring Kafka :
