@@ -16,6 +16,64 @@ Projet local avec :
 - Maven 3.9+
 - Docker Desktop
 
+## Architecture
+Le projet simule un systeme de commande e-commerce en microservices. L'API Gateway recoit les appels HTTP, puis les services communiquent principalement avec Kafka via des evenements Avro. Les bases PostgreSQL sont separees par domaine.
+
+```mermaid
+flowchart LR
+    Client[Client PowerShell / HTTP] --> Gateway[api-gateway :8080]
+    Gateway --> Order[order-service :8081]
+
+    Order --> OrderDb[(PostgreSQL orderdb)]
+    Payment --> PaymentDb[(PostgreSQL paymentdb)]
+    Inventory --> InventoryDb[(PostgreSQL inventorydb)]
+
+    Order -->|order-created| Kafka[(Kafka)]
+    Kafka -->|order-created| Payment[payment-service :8082]
+    Payment -->|payment-processed / payment-failed / payment-refunded| Kafka
+    Kafka -->|payment-processed| Inventory[inventory-service :8084]
+    Inventory -->|inventory-updated / inventory-failed| Kafka
+    Kafka -->|payment / inventory events| Order
+    Kafka -->|inventory-updated| Notification[notification-service :8083]
+
+    Kafka --> SchemaRegistry[Schema Registry :8086]
+    Kafka --> KafkaUi[Kafka UI :8085]
+
+    Gateway --> Prometheus[Prometheus :9090]
+    Order --> Prometheus
+    Payment --> Prometheus
+    Inventory --> Prometheus
+    Notification --> Prometheus
+    Prometheus --> Grafana[Grafana :3000]
+
+    Gateway --> Otel[OTEL Collector]
+    Order --> Otel
+    Payment --> Otel
+    Inventory --> Otel
+    Notification --> Otel
+    Otel --> Jaeger[Jaeger :16686]
+```
+
+Responsabilites :
+- `api-gateway` : point d'entree HTTP, routage, API key, correlation id, rate limiting
+- `order-service` : creation des commandes, read model, outbox, historique des evenements Saga
+- `payment-service` : traitement paiement, idempotence anti double paiement, compensation remboursement
+- `inventory-service` : reservation ou refus inventaire
+- `notification-service` : consommation des evenements de commande confirmee
+- `Kafka` : bus d'evenements entre services
+- `Schema Registry` : contrats Avro des evenements Kafka
+- `Prometheus` et `Grafana` : metriques et dashboards
+- `OTEL Collector` et `Jaeger` : tracing distribue
+- `PgAdmin` : inspection des bases PostgreSQL
+
+Flux principal :
+1. Le client cree une commande via `POST /api/orders`
+2. `order-service` persiste la commande et publie `order-created`
+3. `payment-service` consomme `order-created` et publie `payment-processed` ou `payment-failed`
+4. `inventory-service` consomme `payment-processed` et publie `inventory-updated` ou `inventory-failed`
+5. Si l'inventaire echoue, `payment-service` publie `payment-refunded`
+6. `order-service` consomme les evenements et met a jour le statut final
+
 ## Lancer l'infra
 ```bash
 docker compose up -d
