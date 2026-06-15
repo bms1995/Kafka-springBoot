@@ -25,6 +25,7 @@ Projet local avec :
 - NetworkPolicy Kubernetes pour limiter le trafic entre pods
 - PodDisruptionBudget Kubernetes pour limiter les interruptions volontaires
 - support JWT/OAuth2 optionnel sur l'API Gateway
+- scan securite Trivy dans GitHub Actions
 
 ## Prerequis
 - Java 21
@@ -262,6 +263,7 @@ docker build -t kafka-springboot/notification-service:local ./notification-servi
 ```
 
 La CI GitHub Actions verifie les tests Maven et le build des images Docker a chaque push/PR sur `main`.
+Elle execute aussi un scan Trivy sur le repository pour les vulnerabilites, secrets et mauvaises configurations.
 
 ## Tester avec PowerShell
 Succes normal :

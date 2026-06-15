@@ -20,6 +20,7 @@ Ce projet demontre une architecture microservices event-driven en local. Pour se
 - Tracing distribue OTEL vers Jaeger
 - Smoke test local
 - CI GitHub Actions : schemas, tests Maven, build Docker
+- Scan Trivy CI : vulnerabilites, secrets et mauvaises configurations
 - Manifests Kubernetes de base pour les microservices applicatifs
 - HorizontalPodAutoscaler Kubernetes sur les microservices applicatifs
 - NetworkPolicy Kubernetes pour controler le trafic entre pods
