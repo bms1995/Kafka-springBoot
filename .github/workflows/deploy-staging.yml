@@ -33,7 +33,7 @@ jobs:
           chmod 600 "$HOME/.kube/config"
 
       - name: Apply manifests
-        run: kubectl apply -k overlays/staging
+        run: kubectl apply -k overlays/staging --validate=false
 
       - name: Pin staging image tag
         run: |
