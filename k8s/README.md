@@ -19,7 +19,7 @@ kubectl apply -k k8s
 Pour utiliser les images publiees dans GitHub Container Registry :
 
 ```bash
-kubectl apply -k k8s/overlays/staging
+kubectl apply -k overlays/staging
 ```
 
 Le workflow GitHub Actions `Deploy staging` peut appliquer cet overlay sur un cluster distant si le secret `KUBE_CONFIG_STAGING` est configure.
@@ -57,7 +57,7 @@ Invoke-RestMethod -Method Post `
 ## A faire pour une vraie production
 
 - Remplacer `image:local` par des images taguees dans un registry
-- Deployer l'overlay `k8s/overlays/staging` depuis un runner connecte au cluster
+- Deployer l'overlay `overlays/staging` depuis un runner connecte au cluster
 - Utiliser un secret manager externe
 - Ajouter Ingress avec TLS
 - Ajouter ServiceMonitor Prometheus Operator
