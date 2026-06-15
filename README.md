@@ -1,5 +1,11 @@
 # Kafka Spring Microservices
 
+[![CI](https://github.com/bms1995/Kafka-springBoot/actions/workflows/ci.yml/badge.svg)](https://github.com/bms1995/Kafka-springBoot/actions/workflows/ci.yml)
+![Java 21](https://img.shields.io/badge/Java-21-orange)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-brightgreen)
+![Kafka](https://img.shields.io/badge/Kafka-event--driven-blue)
+![Docker](https://img.shields.io/badge/Docker-compose-blue)
+
 Projet local avec :
 - `api-gateway`
 - `order-service`
