@@ -5,6 +5,7 @@
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-brightgreen)
 ![Kafka](https://img.shields.io/badge/Kafka-event--driven-blue)
 ![Docker](https://img.shields.io/badge/Docker-compose-blue)
+![Kubernetes](https://img.shields.io/badge/Kubernetes-manifests-326ce5)
 ![Resilience4j](https://img.shields.io/badge/Resilience4j-circuit--breaker-lightgrey)
 
 Projet local avec :
@@ -18,6 +19,7 @@ Projet local avec :
 - Prometheus, Grafana, Actuator
 - Saga, Outbox, Avro, Flyway, anti double paiement
 - Resilience4j circuit breaker sur l'API Gateway
+- manifests Kubernetes pour les microservices applicatifs
 
 ## Prerequis
 - Java 21
@@ -392,6 +394,7 @@ Documentation des contrats :
 - catalogue humain : `docs/event-catalog.md`
 - specification AsyncAPI : `docs/asyncapi.yaml`
 - roadmap production : `docs/production-readiness.md`
+- manifests Kubernetes : `k8s/`
 
 ## Event Metadata
 Les evenements de saga portent des metadonnees de tracing :

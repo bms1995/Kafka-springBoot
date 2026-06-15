@@ -19,6 +19,7 @@ Ce projet demontre une architecture microservices event-driven en local. Pour se
 - Tracing distribue OTEL vers Jaeger
 - Smoke test local
 - CI GitHub Actions : schemas, tests Maven, build Docker
+- Manifests Kubernetes de base pour les microservices applicatifs
 
 ## Securite
 - Remplacer l'API key locale par OAuth2/OIDC ou JWT
@@ -29,7 +30,7 @@ Ce projet demontre une architecture microservices event-driven en local. Pour se
 - Ajouter des checks de dependances vulnerables dans la CI
 
 ## Deploiement
-- Ajouter des manifests Kubernetes ou un chart Helm
+- Industrialiser les manifests Kubernetes ou ajouter un chart Helm
 - Ajouter readiness/liveness probes Kubernetes
 - Externaliser la configuration par environnement : local, staging, production
 - Ajouter un pipeline de deploiement vers un cluster
