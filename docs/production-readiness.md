@@ -14,6 +14,7 @@ Ce projet demontre une architecture microservices event-driven en local. Pour se
 - Dead-letter topics Kafka
 - Retry Kafka cote consommateurs
 - API Gateway avec API key, correlation id et rate limiting
+- Circuit breaker Resilience4j sur les routes de l'API Gateway
 - Metrics Prometheus et visualisation Grafana
 - Tracing distribue OTEL vers Jaeger
 - Smoke test local
@@ -35,7 +36,7 @@ Ce projet demontre une architecture microservices event-driven en local. Pour se
 - Ajouter une strategie blue/green ou rolling update
 
 ## Resilience
-- Ajouter circuit breaker et timeout sur les appels HTTP interservices si de nouveaux appels synchrones sont introduits
+- Ajouter circuit breaker et timeout sur les nouveaux appels HTTP interservices si de nouveaux appels synchrones sont introduits
 - Ajouter des limites de consommation Kafka par service
 - Ajouter une strategie de replay controle des DLQ
 - Ajouter des tests de panne Kafka, PostgreSQL et Schema Registry

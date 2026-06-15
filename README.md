@@ -5,6 +5,7 @@
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-brightgreen)
 ![Kafka](https://img.shields.io/badge/Kafka-event--driven-blue)
 ![Docker](https://img.shields.io/badge/Docker-compose-blue)
+![Resilience4j](https://img.shields.io/badge/Resilience4j-circuit--breaker-lightgrey)
 
 Projet local avec :
 - `api-gateway`
@@ -16,6 +17,7 @@ Projet local avec :
 - PostgreSQL separe pour order, payment et inventory
 - Prometheus, Grafana, Actuator
 - Saga, Outbox, Avro, Flyway, anti double paiement
+- Resilience4j circuit breaker sur l'API Gateway
 
 ## Prerequis
 - Java 21
@@ -62,6 +64,7 @@ flowchart LR
 
 Responsabilites :
 - `api-gateway` : point d'entree HTTP, routage, API key, correlation id, rate limiting
+- `api-gateway` protege aussi les routes avec Resilience4j circuit breaker et fallback HTTP 503
 - `order-service` : creation des commandes, read model, outbox, historique des evenements Saga
 - `payment-service` : traitement paiement, idempotence anti double paiement, compensation remboursement
 - `inventory-service` : reservation ou refus inventaire
@@ -309,6 +312,7 @@ Invoke-RestMethod -Method Get `
 - ajoute ou propage le header `X-Correlation-Id`
 - protege les routes `/api/**` avec `X-API-Key`
 - applique un rate limit par client, configurable via `API_GATEWAY_RATE_LIMIT_*`
+- applique un circuit breaker Resilience4j par route avec fallback `503 Service Unavailable`
 - expose `/actuator/prometheus`
 
 API key locale par defaut :
