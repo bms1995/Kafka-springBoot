@@ -21,6 +21,7 @@ Projet local avec :
 - Saga, Outbox, Avro, Flyway, anti double paiement
 - Resilience4j circuit breaker sur l'API Gateway
 - manifests Kubernetes pour les microservices applicatifs
+- HPA Kubernetes pour autoscaling horizontal
 - support JWT/OAuth2 optionnel sur l'API Gateway
 
 ## Prerequis

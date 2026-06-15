@@ -9,3 +9,4 @@ resources:
   - payment-service.yaml
   - inventory-service.yaml
   - notification-service.yaml
+  - hpa.yaml

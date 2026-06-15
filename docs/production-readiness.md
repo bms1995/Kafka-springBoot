@@ -21,6 +21,7 @@ Ce projet demontre une architecture microservices event-driven en local. Pour se
 - Smoke test local
 - CI GitHub Actions : schemas, tests Maven, build Docker
 - Manifests Kubernetes de base pour les microservices applicatifs
+- HorizontalPodAutoscaler Kubernetes sur les microservices applicatifs
 
 ## Securite
 - Remplacer progressivement l'API key locale par OAuth2/OIDC ou JWT

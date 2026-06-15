@@ -42,13 +42,13 @@ Invoke-RestMethod -Method Post `
 - Probes readiness/liveness basees sur Spring Boot Actuator
 - Requests/limits CPU et memoire
 - Gateway expose en `LoadBalancer`
+- Autoscaling horizontal avec HPA de 2 a 5 replicas par service
 
 ## A faire pour une vraie production
 
 - Remplacer `image:local` par des images taguees dans un registry
 - Utiliser un secret manager externe
 - Ajouter Ingress avec TLS
-- Ajouter HorizontalPodAutoscaler
 - Ajouter PodDisruptionBudget
 - Ajouter NetworkPolicy
 - Ajouter ServiceMonitor Prometheus Operator
