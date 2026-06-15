@@ -44,11 +44,11 @@ Invoke-RestMethod -Method Post `
 - Gateway expose en `LoadBalancer`
 - Autoscaling horizontal avec HPA de 2 a 5 replicas par service
 - NetworkPolicy pour limiter le trafic entrant vers les services
+- PodDisruptionBudget pour garder au moins 1 pod disponible par service pendant les maintenances
 
 ## A faire pour une vraie production
 
 - Remplacer `image:local` par des images taguees dans un registry
 - Utiliser un secret manager externe
 - Ajouter Ingress avec TLS
-- Ajouter PodDisruptionBudget
 - Ajouter ServiceMonitor Prometheus Operator

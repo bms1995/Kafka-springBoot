@@ -11,3 +11,4 @@ resources:
   - notification-service.yaml
   - hpa.yaml
   - network-policy.yaml
+  - pdb.yaml

@@ -23,6 +23,7 @@ Ce projet demontre une architecture microservices event-driven en local. Pour se
 - Manifests Kubernetes de base pour les microservices applicatifs
 - HorizontalPodAutoscaler Kubernetes sur les microservices applicatifs
 - NetworkPolicy Kubernetes pour controler le trafic entre pods
+- PodDisruptionBudget Kubernetes pour limiter les interruptions volontaires
 
 ## Securite
 - Remplacer progressivement l'API key locale par OAuth2/OIDC ou JWT

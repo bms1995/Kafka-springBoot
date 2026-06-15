@@ -23,6 +23,7 @@ Projet local avec :
 - manifests Kubernetes pour les microservices applicatifs
 - HPA Kubernetes pour autoscaling horizontal
 - NetworkPolicy Kubernetes pour limiter le trafic entre pods
+- PodDisruptionBudget Kubernetes pour limiter les interruptions volontaires
 - support JWT/OAuth2 optionnel sur l'API Gateway
 
 ## Prerequis
