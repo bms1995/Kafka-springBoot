@@ -47,6 +47,95 @@ Grafana local :
 - login : `admin`
 - password : `admin`
 
+## Manipulation rapide
+Cette section donne le parcours le plus simple pour verifier le projet apres `docker compose up -d --build`.
+
+1. Lancer le smoke test :
+
+```powershell
+.\scripts\smoke-test.ps1
+```
+
+Resultat attendu :
+
+```text
+Smoke test completed successfully.
+```
+
+2. Tester une commande depuis PowerShell :
+
+```powershell
+Invoke-RestMethod -Method Post `
+  -Uri "http://localhost:8080/api/orders" `
+  -Headers @{"X-API-Key"="local-dev-key"} `
+  -ContentType "application/json" `
+  -Body '{"orderId":"demo-order-1","productName":"MacBook Pro","quantity":1,"amount":250,"customerEmail":"client@test.com"}'
+```
+
+3. Lire l'etat de la commande :
+
+```powershell
+Invoke-RestMethod -Method Get `
+  -Uri "http://localhost:8080/api/orders/demo-order-1" `
+  -Headers @{"X-API-Key"="local-dev-key"}
+```
+
+4. Lire la timeline Kafka/Saga :
+
+```powershell
+Invoke-RestMethod -Method Get `
+  -Uri "http://localhost:8080/api/orders/demo-order-1/events" `
+  -Headers @{"X-API-Key"="local-dev-key"}
+```
+
+## Interfaces de controle
+Kafka UI :
+- URL : http://localhost:8085
+- sert a voir les topics Kafka et les messages
+- topics principaux : `order-created`, `payment-processed`, `inventory-updated`, `inventory-failed`, `payment-refunded`
+
+Grafana :
+- URL : http://localhost:3000
+- login : `admin`
+- password : `admin`
+- menu : `Explore`
+- datasource : `Prometheus`
+- requetes utiles : `up`, `payment_succeeded_total`, `payment_failed_total`, `payment_refunded_total`, `order_outbox_published_total`
+
+Jaeger :
+- URL : http://localhost:16686
+- champ `Service` : choisir `api-gateway`, `order-service`, `payment-service` ou `inventory-service`
+- cliquer sur `Find Traces`
+- sert a voir le chemin d'une requete entre les services
+
+PgAdmin :
+- URL : http://localhost:5050
+- login : `admin@admin.com`
+- password : `admin`
+- ajouter les serveurs PostgreSQL manuellement
+
+Serveur `order-db` :
+- host : `postgres-order`
+- port : `5432`
+- database : `orderdb`
+- username : `myuser`
+- password : `mypassword`
+- tables utiles : `orders`, `order_event_history`, `outbox_events`, `processed_events`
+
+Serveur `payment-db` :
+- host : `postgres-payment`
+- port : `5432`
+- database : `paymentdb`
+- username : `myuser`
+- password : `mypassword`
+
+Serveur `inventory-db` :
+- host : `postgres-inventory`
+- port : `5432`
+- database : `inventorydb`
+- username : `myuser`
+- password : `mypassword`
+
 ## Lancer les services
 Lance les services dans 4 terminaux separes, dans cet ordre :
 
