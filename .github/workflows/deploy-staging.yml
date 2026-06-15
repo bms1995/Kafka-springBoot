@@ -1,0 +1,52 @@
+name: Deploy staging
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: Image tag to deploy
+        required: true
+        default: latest
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to staging
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure kubeconfig
+        env:
+          KUBE_CONFIG_STAGING: ${{ secrets.KUBE_CONFIG_STAGING }}
+        run: |
+          if [ -z "$KUBE_CONFIG_STAGING" ]; then
+            echo "Missing KUBE_CONFIG_STAGING secret"
+            exit 1
+          fi
+          mkdir -p "$HOME/.kube"
+          echo "$KUBE_CONFIG_STAGING" | base64 -d > "$HOME/.kube/config"
+          chmod 600 "$HOME/.kube/config"
+
+      - name: Apply manifests
+        run: kubectl apply -k k8s/overlays/staging
+
+      - name: Pin staging image tag
+        run: |
+          kubectl -n kafka-spring set image deployment/api-gateway api-gateway=ghcr.io/bms1995/kafka-springboot/api-gateway:${{ inputs.image_tag }}
+          kubectl -n kafka-spring set image deployment/order-service order-service=ghcr.io/bms1995/kafka-springboot/order-service:${{ inputs.image_tag }}
+          kubectl -n kafka-spring set image deployment/payment-service payment-service=ghcr.io/bms1995/kafka-springboot/payment-service:${{ inputs.image_tag }}
+          kubectl -n kafka-spring set image deployment/inventory-service inventory-service=ghcr.io/bms1995/kafka-springboot/inventory-service:${{ inputs.image_tag }}
+          kubectl -n kafka-spring set image deployment/notification-service notification-service=ghcr.io/bms1995/kafka-springboot/notification-service:${{ inputs.image_tag }}
+
+      - name: Wait for rollout
+        run: |
+          kubectl -n kafka-spring rollout status deployment/api-gateway --timeout=180s
+          kubectl -n kafka-spring rollout status deployment/order-service --timeout=180s
+          kubectl -n kafka-spring rollout status deployment/payment-service --timeout=180s
+          kubectl -n kafka-spring rollout status deployment/inventory-service --timeout=180s
+          kubectl -n kafka-spring rollout status deployment/notification-service --timeout=180s
