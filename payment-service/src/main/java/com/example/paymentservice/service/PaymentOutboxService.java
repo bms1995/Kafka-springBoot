@@ -1,5 +1,6 @@
 package com.example.paymentservice.service;
 
+import com.example.commonevents.EventTopics;
 import com.example.paymentservice.entity.OutboxEvent;
 import com.example.paymentservice.repository.OutboxEventRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,9 +18,9 @@ import java.nio.charset.StandardCharsets;
 @RequiredArgsConstructor
 public class PaymentOutboxService {
 
-    public static final String PAYMENT_PROCESSED_TOPIC = "payment-processed";
-    public static final String PAYMENT_FAILED_TOPIC = "payment-failed";
-    public static final String PAYMENT_REFUNDED_TOPIC = "payment-refunded";
+    public static final String PAYMENT_PROCESSED_TOPIC = EventTopics.PAYMENT_PROCESSED;
+    public static final String PAYMENT_FAILED_TOPIC = EventTopics.PAYMENT_FAILED;
+    public static final String PAYMENT_REFUNDED_TOPIC = EventTopics.PAYMENT_REFUNDED;
 
     private final OutboxEventRepository outboxEventRepository;
 

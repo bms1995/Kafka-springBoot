@@ -49,6 +49,13 @@ Il deploie les workloads applicatifs avec les images GHCR. Les dependances doive
 
 Les evenements Kafka sont des contrats publics entre services.
 
+Le module `common-events` porte les constantes et conventions partagees :
+
+- noms canoniques des topics
+- noms des producteurs
+- champs de metadata obligatoires
+- helpers de metadata generiques
+
 Regles cible :
 
 - evolution Avro compatible
