@@ -4,34 +4,15 @@
          https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.example</groupId>
-    <artifactId>payment-service</artifactId>
-    <version>1.0.0</version>
-    <name>payment-service</name>
-
     <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.12</version>
-        <relativePath/>
+        <groupId>com.example</groupId>
+        <artifactId>kafka-spring-microservices</artifactId>
+        <version>1.0.0</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <properties>
-        <java.version>21</java.version>
-        <confluent.version>7.6.1</confluent.version>
-        <testcontainers.version>1.21.3</testcontainers.version>
-        <avro.version>1.11.4</avro.version>
-        <kafka-clients.version>3.9.2</kafka-clients.version>
-        <postgresql.version>42.7.11</postgresql.version>
-        <spring-kafka.version>3.3.16</spring-kafka.version>
-    </properties>
-
-    <repositories>
-        <repository>
-            <id>confluent</id>
-            <url>https://packages.confluent.io/maven/</url>
-        </repository>
-    </repositories>
+    <artifactId>payment-service</artifactId>
+    <name>payment-service</name>
 
     <dependencies>
         <dependency>

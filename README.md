@@ -525,6 +525,14 @@ Flyway gere les schemas :
 Hibernate est en `ddl-auto: validate`.
 
 ## Tests
+Tout le reactor Maven :
+
+```bash
+mvn test
+```
+
+Un service precis :
+
 ```bash
 cd payment-service
 mvn test
