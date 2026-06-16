@@ -24,6 +24,14 @@ kubectl apply -k overlays/staging
 
 Le workflow GitHub Actions `Deploy staging` peut appliquer cet overlay sur un cluster distant si le secret `KUBE_CONFIG_STAGING` est configure.
 
+Pour Docker Desktop avec dependances embarquees :
+
+```bash
+kubectl apply -k overlays/local
+```
+
+`overlays/staging` attend que les services `postgres-order`, `postgres-payment`, `postgres-inventory`, `kafka`, `schema-registry` et `otel-collector` soient fournis par l'environnement cible ou par un overlay infra dedie.
+
 ## Exposer le gateway en local
 
 ```bash

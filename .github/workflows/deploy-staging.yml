@@ -7,6 +7,10 @@ on:
         description: Image tag to deploy
         required: true
         default: latest
+      smoke_base_url:
+        description: Optional public API Gateway base URL for smoke test
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -31,6 +35,12 @@ jobs:
           mkdir -p "$HOME/.kube"
           echo "$KUBE_CONFIG_STAGING" | base64 -d > "$HOME/.kube/config"
           chmod 600 "$HOME/.kube/config"
+          if grep -q 'kubernetes\.docker\.internal' "$HOME/.kube/config"; then
+            echo "KUBE_CONFIG_STAGING points to Docker Desktop (kubernetes.docker.internal)."
+            echo "Docker Desktop Kubernetes is only reachable from your local machine, not from GitHub-hosted runners."
+            echo "Use a kubeconfig for a remote cluster, or deploy Docker Desktop locally with scripts/deploy-staging.ps1."
+            exit 1
+          fi
 
       - name: Apply manifests
         run: kubectl apply -k overlays/staging --validate=false
@@ -50,3 +60,15 @@ jobs:
           kubectl -n kafka-spring rollout status deployment/payment-service --timeout=180s
           kubectl -n kafka-spring rollout status deployment/inventory-service --timeout=180s
           kubectl -n kafka-spring rollout status deployment/notification-service --timeout=180s
+
+      - name: Smoke test public gateway
+        if: inputs.smoke_base_url != ''
+        shell: pwsh
+        env:
+          SMOKE_BASE_URL: ${{ inputs.smoke_base_url }}
+          SMOKE_API_KEY: ${{ secrets.STAGING_API_KEY }}
+        run: |
+          if (-not $env:SMOKE_API_KEY) {
+            throw "Missing STAGING_API_KEY secret"
+          }
+          ./scripts/smoke-test.ps1 -BaseUrl $env:SMOKE_BASE_URL -ApiKey $env:SMOKE_API_KEY

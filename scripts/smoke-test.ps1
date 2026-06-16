@@ -1,5 +1,8 @@
 param(
-    [string]$BaseUrl = "http://localhost:8081"
+    [string]$BaseUrl = "http://localhost:8080",
+    [string]$ApiKey = "local-dev-key",
+    [string]$SchemaRegistryUrl = "",
+    [int]$SettleSeconds = 10
 )
 
 $ErrorActionPreference = "Stop"
@@ -10,23 +13,28 @@ function Invoke-JsonPost {
         [string]$Body
     )
 
-    Invoke-RestMethod -Method Post -Uri $Uri -ContentType "application/json" -Body $Body
+    Invoke-RestMethod -Method Post -Uri $Uri -Headers @{ "X-API-Key" = $ApiKey } -ContentType "application/json" -Body $Body
 }
 
 function Assert-HttpOk {
-    param([string]$Uri)
+    param(
+        [string]$Uri,
+        [switch]$UseApiKey
+    )
 
-    $response = Invoke-WebRequest -Uri $Uri -UseBasicParsing
+    $headers = @{}
+    if ($UseApiKey) {
+        $headers["X-API-Key"] = $ApiKey
+    }
+
+    $response = Invoke-WebRequest -Uri $Uri -Headers $headers -UseBasicParsing
     if ($response.StatusCode -lt 200 -or $response.StatusCode -ge 300) {
         throw "Expected HTTP 2xx from $Uri but got $($response.StatusCode)"
     }
 }
 
-Write-Host "Checking service health endpoints..."
-Assert-HttpOk "http://localhost:8081/actuator/health"
-Assert-HttpOk "http://localhost:8082/actuator/health"
-Assert-HttpOk "http://localhost:8083/actuator/health"
-Assert-HttpOk "http://localhost:8084/actuator/health"
+Write-Host "Checking API Gateway health..."
+Assert-HttpOk "$BaseUrl/actuator/health/readiness"
 
 Write-Host "Sending successful order..."
 Invoke-JsonPost "$BaseUrl/api/orders" '{"orderId":"smoke-success-1","productName":"MacBook Pro","quantity":1,"amount":250,"customerEmail":"client@test.com"}'
@@ -40,22 +48,28 @@ Invoke-JsonPost "$BaseUrl/api/orders" '{"orderId":"smoke-payment-failed-1","prod
 Write-Host "Sending inventory compensation order..."
 Invoke-JsonPost "$BaseUrl/api/orders" '{"orderId":"fail-inventory-smoke-1","productName":"MacBook Pro","quantity":1,"amount":250,"customerEmail":"client@test.com"}'
 
-Start-Sleep -Seconds 5
+Start-Sleep -Seconds $SettleSeconds
 
-Write-Host "Checking Schema Registry subjects..."
-$subjects = Invoke-RestMethod -Uri "http://localhost:8086/subjects"
-$requiredSubjects = @(
-    "order-created-value",
-    "payment-processed-value",
-    "payment-failed-value",
-    "payment-refunded-value",
-    "inventory-updated-value",
-    "inventory-failed-value"
-)
+Write-Host "Checking materialized order read model..."
+Assert-HttpOk "$BaseUrl/api/orders/smoke-success-1" -UseApiKey
+Assert-HttpOk "$BaseUrl/api/orders/smoke-success-1/events" -UseApiKey
 
-foreach ($subject in $requiredSubjects) {
-    if ($subjects -notcontains $subject) {
-        throw "Missing schema subject: $subject"
+if ($SchemaRegistryUrl) {
+    Write-Host "Checking Schema Registry subjects..."
+    $subjects = Invoke-RestMethod -Uri "$SchemaRegistryUrl/subjects"
+    $requiredSubjects = @(
+        "order-created-value",
+        "payment-processed-value",
+        "payment-failed-value",
+        "payment-refunded-value",
+        "inventory-updated-value",
+        "inventory-failed-value"
+    )
+
+    foreach ($subject in $requiredSubjects) {
+        if ($subjects -notcontains $subject) {
+            throw "Missing schema subject: $subject"
+        }
     }
 }
 

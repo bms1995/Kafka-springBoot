@@ -291,7 +291,13 @@ Declencher un deploiement staging :
 .\scripts\deploy-staging.ps1 -ImageTag latest
 ```
 
-Avec Docker Desktop Kubernetes, cette commande deploie depuis ta machine locale. Le workflow GitHub `Deploy staging` est reserve a un cluster distant accessible depuis Internet ou via un runner prive.
+Cette commande declenche le workflow GitHub `Deploy staging`. Le cluster cible doit etre accessible depuis GitHub Actions, par exemple K3s sur OVH.
+
+Pour Docker Desktop Kubernetes, utiliser l'overlay local :
+
+```powershell
+.\scripts\deploy-local.ps1 -ImageTag latest
+```
 
 Pour deployer une version exacte, utiliser le SHA du commit comme `ImageTag`.
 
