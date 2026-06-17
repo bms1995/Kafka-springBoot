@@ -1,7 +1,6 @@
 package com.example.orderservice.kafka;
 
 import com.example.orderservice.entity.OutboxEvent;
-import com.example.orderservice.entity.OutboxStatus;
 import com.example.orderservice.metrics.OrderMetrics;
 import com.example.orderservice.repository.OutboxEventRepository;
 import lombok.RequiredArgsConstructor;
@@ -40,8 +39,8 @@ public class OrderOutboxPublisher {
     @Scheduled(fixedDelayString = "${app.outbox.publish-delay-ms:1000}")
     @Transactional
     public void publishPendingEvents() {
-        for (OutboxEvent outboxEvent : outboxEventRepository
-                .findTop50ByStatusAndNextAttemptAtLessThanEqualOrderByCreatedAtAsc(OutboxStatus.PENDING, Instant.now())) {
+        for (OutboxEvent outboxEvent : outboxEventRepository.claimPublishableEvents(Instant.now())) {
+            outboxEvent.markProcessing();
             publish(outboxEvent);
         }
     }

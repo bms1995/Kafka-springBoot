@@ -89,7 +89,6 @@ Les services qui publient des evenements doivent utiliser une outbox transaction
 
 Ameliorations cible :
 
-- claim batch avec verrouillage concurrent safe
 - compteur de tentatives
 - backoff configurable
 - dead outbox apres seuil d'echec

@@ -1,7 +1,6 @@
 package com.example.paymentservice.kafka;
 
 import com.example.paymentservice.entity.OutboxEvent;
-import com.example.paymentservice.entity.OutboxStatus;
 import com.example.paymentservice.metrics.PaymentMetrics;
 import com.example.paymentservice.repository.OutboxEventRepository;
 import lombok.RequiredArgsConstructor;
@@ -40,8 +39,8 @@ public class PaymentOutboxPublisher {
     @Scheduled(fixedDelayString = "${app.outbox.publish-delay-ms:1000}")
     @Transactional
     public void publishPendingEvents() {
-        for (OutboxEvent outboxEvent : outboxEventRepository
-                .findTop50ByStatusAndNextAttemptAtLessThanEqualOrderByCreatedAtAsc(OutboxStatus.PENDING, Instant.now())) {
+        for (OutboxEvent outboxEvent : outboxEventRepository.claimPublishableEvents(Instant.now())) {
+            outboxEvent.markProcessing();
             publish(outboxEvent);
         }
     }

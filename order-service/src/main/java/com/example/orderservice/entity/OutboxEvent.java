@@ -63,6 +63,10 @@ public class OutboxEvent {
         this.lastError = null;
     }
 
+    public void markProcessing() {
+        this.status = OutboxStatus.PROCESSING;
+    }
+
     public void markPublishFailed(String errorMessage, int maxAttempts, long baseBackoffMs, long maxBackoffMs) {
         this.attemptCount++;
         this.lastError = errorMessage;
@@ -74,6 +78,7 @@ public class OutboxEvent {
 
         long multiplier = 1L << Math.min(this.attemptCount - 1, 30);
         long delayMs = Math.min(baseBackoffMs * multiplier, maxBackoffMs);
+        this.status = OutboxStatus.PENDING;
         this.nextAttemptAt = Instant.now().plus(delayMs, ChronoUnit.MILLIS);
     }
 }
