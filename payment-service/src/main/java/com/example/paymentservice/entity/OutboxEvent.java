@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 @Setter
@@ -39,6 +40,8 @@ public class OutboxEvent {
 
     private Instant publishedAt;
 
+    private Instant nextAttemptAt;
+
     private int attemptCount;
 
     @Column(columnDefinition = "text")
@@ -52,19 +55,27 @@ public class OutboxEvent {
         this.payload = payload;
         this.status = OutboxStatus.PENDING;
         this.createdAt = Instant.now();
+        this.nextAttemptAt = this.createdAt;
     }
 
     public void markPublished() {
         this.status = OutboxStatus.PUBLISHED;
         this.publishedAt = Instant.now();
+        this.nextAttemptAt = null;
         this.lastError = null;
     }
 
-    public void markPublishFailed(String errorMessage, int maxAttempts) {
+    public void markPublishFailed(String errorMessage, int maxAttempts, long baseBackoffMs, long maxBackoffMs) {
         this.attemptCount++;
         this.lastError = errorMessage;
         if (this.attemptCount >= maxAttempts) {
             this.status = OutboxStatus.DEAD;
+            this.nextAttemptAt = null;
+            return;
         }
+
+        long multiplier = 1L << Math.min(this.attemptCount - 1, 30);
+        long delayMs = Math.min(baseBackoffMs * multiplier, maxBackoffMs);
+        this.nextAttemptAt = Instant.now().plus(delayMs, ChronoUnit.MILLIS);
     }
 }

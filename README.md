@@ -440,6 +440,7 @@ Cette approche simule un pattern inbox/read-model utilise en production pour deb
 - un publisher planifie publie les evenements pending vers Kafka
 - si Kafka est indisponible, l'evenement reste en base et sera rejoue
 - chaque echec incremente `attempt_count` et conserve `last_error`
+- les retries utilisent `next_attempt_at` avec backoff exponentiel configurable via `OUTBOX_BASE_BACKOFF_MS` et `OUTBOX_MAX_BACKOFF_MS`
 - apres `OUTBOX_MAX_ATTEMPTS`, l'evenement passe en statut `DEAD`
 - les publishers exposent des compteurs Prometheus de succes/echec
 

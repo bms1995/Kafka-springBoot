@@ -17,6 +17,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -29,10 +31,17 @@ public class PaymentOutboxPublisher {
     @Value("${app.outbox.max-attempts:5}")
     private int maxAttempts;
 
+    @Value("${app.outbox.base-backoff-ms:1000}")
+    private long baseBackoffMs;
+
+    @Value("${app.outbox.max-backoff-ms:60000}")
+    private long maxBackoffMs;
+
     @Scheduled(fixedDelayString = "${app.outbox.publish-delay-ms:1000}")
     @Transactional
     public void publishPendingEvents() {
-        for (OutboxEvent outboxEvent : outboxEventRepository.findTop50ByStatusOrderByCreatedAtAsc(OutboxStatus.PENDING)) {
+        for (OutboxEvent outboxEvent : outboxEventRepository
+                .findTop50ByStatusAndNextAttemptAtLessThanEqualOrderByCreatedAtAsc(OutboxStatus.PENDING, Instant.now())) {
             publish(outboxEvent);
         }
     }
@@ -52,7 +61,7 @@ public class PaymentOutboxPublisher {
                     outboxEvent.getTopic(),
                     outboxEvent.getAggregateId());
         } catch (Exception ex) {
-            outboxEvent.markPublishFailed(ex.getMessage(), maxAttempts);
+            outboxEvent.markPublishFailed(ex.getMessage(), maxAttempts, baseBackoffMs, maxBackoffMs);
             outboxEventRepository.save(outboxEvent);
             paymentMetrics.incrementOutboxPublishFailed();
             log.error("Could not publish outbox event eventId={} attemptCount={} status={}",
