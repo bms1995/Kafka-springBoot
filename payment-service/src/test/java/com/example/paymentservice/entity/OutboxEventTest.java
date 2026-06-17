@@ -16,12 +16,14 @@ class OutboxEventTest {
         assertThat(event.getStatus()).isEqualTo(OutboxStatus.PENDING);
         assertThat(event.getLastError()).isEqualTo("broker unavailable");
         assertThat(event.getNextAttemptAt()).isAfter(event.getCreatedAt());
+        assertThat(event.getProcessingStartedAt()).isNull();
 
         event.markPublishFailed("broker unavailable", 2, 1000L, 60000L);
 
         assertThat(event.getAttemptCount()).isEqualTo(2);
         assertThat(event.getStatus()).isEqualTo(OutboxStatus.DEAD);
         assertThat(event.getNextAttemptAt()).isNull();
+        assertThat(event.getProcessingStartedAt()).isNull();
     }
 
     @Test
@@ -29,10 +31,12 @@ class OutboxEventTest {
         OutboxEvent event = new OutboxEvent("order-1", "payment-processed", "EventType", "{}");
 
         event.markPublishFailed("temporary failure", 2, 1000L, 60000L);
+        event.markProcessing();
         event.markPublished();
 
         assertThat(event.getStatus()).isEqualTo(OutboxStatus.PUBLISHED);
         assertThat(event.getPublishedAt()).isNotNull();
+        assertThat(event.getProcessingStartedAt()).isNull();
         assertThat(event.getLastError()).isNull();
     }
 
@@ -56,9 +60,13 @@ class OutboxEventTest {
         OutboxEvent event = new OutboxEvent("order-1", "payment-processed", "EventType", "{}");
 
         event.markProcessing();
+
+        assertThat(event.getProcessingStartedAt()).isNotNull();
+
         event.markPublishFailed("temporary failure", 3, 1000L, 60000L);
 
         assertThat(event.getStatus()).isEqualTo(OutboxStatus.PENDING);
         assertThat(event.getNextAttemptAt()).isNotNull();
+        assertThat(event.getProcessingStartedAt()).isNull();
     }
 }

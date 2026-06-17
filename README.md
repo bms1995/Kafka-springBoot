@@ -441,6 +441,7 @@ Cette approche simule un pattern inbox/read-model utilise en production pour deb
 - l'etat metier et l'evenement sont ecrits dans la meme transaction DB
 - un publisher planifie publie les evenements pending vers Kafka
 - le publisher revendique ses batches avec `FOR UPDATE SKIP LOCKED` pour eviter les doubles publications quand plusieurs instances tournent
+- les events bloques en `PROCESSING` sont remis en `PENDING` apres `OUTBOX_PROCESSING_TIMEOUT_MS`
 - si Kafka est indisponible, l'evenement reste en base et sera rejoue
 - chaque echec incremente `attempt_count` et conserve `last_error`
 - les retries utilisent `next_attempt_at` avec backoff exponentiel configurable via `OUTBOX_BASE_BACKOFF_MS` et `OUTBOX_MAX_BACKOFF_MS`

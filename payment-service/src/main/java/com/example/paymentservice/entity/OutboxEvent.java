@@ -42,6 +42,8 @@ public class OutboxEvent {
 
     private Instant nextAttemptAt;
 
+    private Instant processingStartedAt;
+
     private int attemptCount;
 
     @Column(columnDefinition = "text")
@@ -62,11 +64,13 @@ public class OutboxEvent {
         this.status = OutboxStatus.PUBLISHED;
         this.publishedAt = Instant.now();
         this.nextAttemptAt = null;
+        this.processingStartedAt = null;
         this.lastError = null;
     }
 
     public void markProcessing() {
         this.status = OutboxStatus.PROCESSING;
+        this.processingStartedAt = Instant.now();
     }
 
     public void markPublishFailed(String errorMessage, int maxAttempts, long baseBackoffMs, long maxBackoffMs) {
@@ -75,6 +79,7 @@ public class OutboxEvent {
         if (this.attemptCount >= maxAttempts) {
             this.status = OutboxStatus.DEAD;
             this.nextAttemptAt = null;
+            this.processingStartedAt = null;
             return;
         }
 
@@ -82,5 +87,6 @@ public class OutboxEvent {
         long delayMs = Math.min(baseBackoffMs * multiplier, maxBackoffMs);
         this.status = OutboxStatus.PENDING;
         this.nextAttemptAt = Instant.now().plus(delayMs, ChronoUnit.MILLIS);
+        this.processingStartedAt = null;
     }
 }

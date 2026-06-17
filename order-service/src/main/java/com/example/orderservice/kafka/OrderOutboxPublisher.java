@@ -14,9 +14,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.Instant;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -26,6 +27,7 @@ public class OrderOutboxPublisher {
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final OrderMetrics orderMetrics;
     private final OutboxEventRepository outboxEventRepository;
+    private final TransactionTemplate transactionTemplate;
 
     @Value("${app.outbox.max-attempts:5}")
     private int maxAttempts;
@@ -36,13 +38,23 @@ public class OrderOutboxPublisher {
     @Value("${app.outbox.max-backoff-ms:60000}")
     private long maxBackoffMs;
 
+    @Value("${app.outbox.processing-timeout-ms:120000}")
+    private long processingTimeoutMs;
+
     @Scheduled(fixedDelayString = "${app.outbox.publish-delay-ms:1000}")
-    @Transactional
     public void publishPendingEvents() {
-        for (OutboxEvent outboxEvent : outboxEventRepository.claimPublishableEvents(Instant.now())) {
-            outboxEvent.markProcessing();
+        for (OutboxEvent outboxEvent : claimPublishableEvents()) {
             publish(outboxEvent);
         }
+    }
+
+    private List<OutboxEvent> claimPublishableEvents() {
+        return transactionTemplate.execute(status -> {
+            releaseStaleProcessingEvents();
+            List<OutboxEvent> outboxEvents = outboxEventRepository.claimPublishableEvents(Instant.now());
+            outboxEvents.forEach(OutboxEvent::markProcessing);
+            return outboxEventRepository.saveAll(outboxEvents);
+        });
     }
 
     private void publish(OutboxEvent outboxEvent) {
@@ -50,9 +62,11 @@ public class OrderOutboxPublisher {
             Class<?> eventClass = Class.forName(outboxEvent.getEventType());
             Object event = fromAvroJson(outboxEvent, eventClass);
 
-            kafkaTemplate.send(outboxEvent.getTopic(), outboxEvent.getAggregateId(), event);
-            outboxEvent.markPublished();
-            outboxEventRepository.save(outboxEvent);
+            kafkaTemplate.send(outboxEvent.getTopic(), outboxEvent.getAggregateId(), event).get();
+            transactionTemplate.executeWithoutResult(status -> {
+                outboxEvent.markPublished();
+                outboxEventRepository.save(outboxEvent);
+            });
             orderMetrics.incrementOutboxPublished();
 
             log.info("Published order outbox event eventId={} topic={} aggregateId={}",
@@ -60,14 +74,27 @@ public class OrderOutboxPublisher {
                     outboxEvent.getTopic(),
                     outboxEvent.getAggregateId());
         } catch (Exception ex) {
-            outboxEvent.markPublishFailed(ex.getMessage(), maxAttempts, baseBackoffMs, maxBackoffMs);
-            outboxEventRepository.save(outboxEvent);
+            transactionTemplate.executeWithoutResult(status -> {
+                outboxEvent.markPublishFailed(ex.getMessage(), maxAttempts, baseBackoffMs, maxBackoffMs);
+                outboxEventRepository.save(outboxEvent);
+            });
             orderMetrics.incrementOutboxPublishFailed();
             log.error("Could not publish order outbox event eventId={} attemptCount={} status={}",
                     outboxEvent.getEventId(),
                     outboxEvent.getAttemptCount(),
                     outboxEvent.getStatus(),
                     ex);
+        }
+    }
+
+    private void releaseStaleProcessingEvents() {
+        Instant now = Instant.now();
+        int released = outboxEventRepository.releaseStaleProcessingEvents(
+                now.minusMillis(processingTimeoutMs),
+                now
+        );
+        if (released > 0) {
+            log.warn("Released stale order outbox events count={}", released);
         }
     }
 
