@@ -70,10 +70,9 @@ jobs:
           cache: maven
 
       - name: Test ${{ matrix.service }}
-        working-directory: ${{ matrix.service }}
         env:
           TESTCONTAINERS_CHECKS_DISABLE: "true"
-        run: mvn test
+        run: mvn -pl ${{ matrix.service }} -am test
 
   security-scan:
     name: Security scan
@@ -123,8 +122,7 @@ jobs:
           cache: maven
 
       - name: Package ${{ matrix.service }}
-        working-directory: ${{ matrix.service }}
-        run: mvn -DskipTests package
+        run: mvn -pl ${{ matrix.service }} -am -DskipTests package
 
       - name: Log in to GitHub Container Registry
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
