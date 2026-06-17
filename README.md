@@ -438,6 +438,8 @@ Cette approche simule un pattern inbox/read-model utilise en production pour deb
 - l'etat metier et l'evenement sont ecrits dans la meme transaction DB
 - un publisher planifie publie les evenements pending vers Kafka
 - si Kafka est indisponible, l'evenement reste en base et sera rejoue
+- chaque echec incremente `attempt_count` et conserve `last_error`
+- apres `OUTBOX_MAX_ATTEMPTS`, l'evenement passe en statut `DEAD`
 - les publishers exposent des compteurs Prometheus de succes/echec
 
 ## Avro et Schema Registry

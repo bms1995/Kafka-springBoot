@@ -39,6 +39,9 @@ app:
       payment-refunded: ${PAYMENT_REFUNDED_TOPIC:payment-refunded}
       inventory-updated: ${INVENTORY_UPDATED_TOPIC:inventory-updated}
       inventory-failed: ${INVENTORY_FAILED_TOPIC:inventory-failed}
+  outbox:
+    publish-delay-ms: ${OUTBOX_PUBLISH_DELAY_MS:1000}
+    max-attempts: ${OUTBOX_MAX_ATTEMPTS:5}
 
 logging:
   level:

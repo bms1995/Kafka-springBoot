@@ -11,6 +11,7 @@ import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificRecordBase;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,9 @@ public class PaymentOutboxPublisher {
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final PaymentMetrics paymentMetrics;
     private final OutboxEventRepository outboxEventRepository;
+
+    @Value("${app.outbox.max-attempts:5}")
+    private int maxAttempts;
 
     @Scheduled(fixedDelayString = "${app.outbox.publish-delay-ms:1000}")
     @Transactional
@@ -47,11 +51,15 @@ public class PaymentOutboxPublisher {
                     outboxEvent.getEventId(),
                     outboxEvent.getTopic(),
                     outboxEvent.getAggregateId());
-        } catch (ClassNotFoundException ex) {
-            throw new IllegalStateException("Unknown outbox event type: " + outboxEvent.getEventType(), ex);
         } catch (Exception ex) {
+            outboxEvent.markPublishFailed(ex.getMessage(), maxAttempts);
+            outboxEventRepository.save(outboxEvent);
             paymentMetrics.incrementOutboxPublishFailed();
-            log.error("Could not publish outbox event eventId={}", outboxEvent.getEventId(), ex);
+            log.error("Could not publish outbox event eventId={} attemptCount={} status={}",
+                    outboxEvent.getEventId(),
+                    outboxEvent.getAttemptCount(),
+                    outboxEvent.getStatus(),
+                    ex);
         }
     }
 

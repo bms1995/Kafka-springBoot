@@ -37,6 +37,11 @@ public class OutboxEvent {
 
     private Instant publishedAt;
 
+    private int attemptCount;
+
+    @Column(columnDefinition = "text")
+    private String lastError;
+
     public OutboxEvent(String aggregateId, String topic, String eventType, String payload) {
         this.eventId = UUID.randomUUID().toString();
         this.aggregateId = aggregateId;
@@ -50,5 +55,14 @@ public class OutboxEvent {
     public void markPublished() {
         this.status = OutboxStatus.PUBLISHED;
         this.publishedAt = Instant.now();
+        this.lastError = null;
+    }
+
+    public void markPublishFailed(String errorMessage, int maxAttempts) {
+        this.attemptCount++;
+        this.lastError = errorMessage;
+        if (this.attemptCount >= maxAttempts) {
+            this.status = OutboxStatus.DEAD;
+        }
     }
 }
