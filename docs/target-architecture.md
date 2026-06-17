@@ -56,6 +56,13 @@ Le module `common-events` porte les constantes et conventions partagees :
 - champs de metadata obligatoires
 - helpers de metadata generiques
 
+Le module `common-kafka` porte les conventions techniques Kafka partagees :
+
+- error handler standard
+- routage dead-letter topic
+- retry/backoff par defaut
+- logging uniforme des tentatives de consommation
+
 Regles cible :
 
 - evolution Avro compatible
