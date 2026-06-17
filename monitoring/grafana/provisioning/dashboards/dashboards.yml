@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: Kafka Spring Microservices
+    orgId: 1
+    folder: Kafka Spring Microservices
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /etc/grafana/provisioning/dashboards/json

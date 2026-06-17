@@ -176,6 +176,7 @@ Grafana :
 - password : `admin`
 - menu : `Explore`
 - datasource : `Prometheus`
+- dashboard provisionne : `Kafka Spring Microservices`
 - requetes utiles : `up`, `payment_succeeded_total`, `payment_failed_total`, `payment_refunded_total`, `order_outbox_published_total`
 
 Jaeger :
