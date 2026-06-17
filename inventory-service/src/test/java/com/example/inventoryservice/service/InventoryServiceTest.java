@@ -43,7 +43,7 @@ class InventoryServiceTest {
                 "payment-service",
                 "1"
         );
-        when(processedEventRepository.existsById(event.getOrderId())).thenReturn(false);
+        when(processedEventRepository.existsById(event.getEventId())).thenReturn(false);
 
         inventoryService.updateInventory(event);
 
@@ -58,6 +58,7 @@ class InventoryServiceTest {
         InventoryUpdatedEvent inventoryEvent = eventCaptor.getValue();
         assertThat(inventoryEvent.getOrderId()).isEqualTo(event.getOrderId());
         assertThat(inventoryEvent.getStatus()).isEqualTo("UPDATED");
+        assertThat(processedEventCaptor.getValue().getEventId()).isEqualTo(event.getEventId());
         assertThat(processedEventCaptor.getValue().getOrderId()).isEqualTo(event.getOrderId());
     }
 
@@ -74,7 +75,7 @@ class InventoryServiceTest {
                 "payment-service",
                 "1"
         );
-        when(processedEventRepository.existsById(event.getOrderId())).thenReturn(false);
+        when(processedEventRepository.existsById(event.getEventId())).thenReturn(false);
 
         inventoryService.updateInventory(event);
 
@@ -103,7 +104,7 @@ class InventoryServiceTest {
                 "payment-service",
                 "1"
         );
-        when(processedEventRepository.existsById(event.getOrderId())).thenReturn(true);
+        when(processedEventRepository.existsById(event.getEventId())).thenReturn(true);
 
         inventoryService.updateInventory(event);
 

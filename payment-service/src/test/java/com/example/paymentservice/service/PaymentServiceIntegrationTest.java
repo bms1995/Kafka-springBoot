@@ -80,7 +80,7 @@ class PaymentServiceIntegrationTest {
                 .get()
                 .extracting(transaction -> transaction.getStatus())
                 .isEqualTo(PaymentStatus.SUCCESS);
-        assertThat(processedEventRepository.existsById(event.getOrderId())).isTrue();
+        assertThat(processedEventRepository.existsById(event.getEventId())).isTrue();
         assertThat(outboxEventRepository.findTop50ByStatusOrderByCreatedAtAsc(OutboxStatus.PENDING))
                 .hasSize(1)
                 .first()

@@ -424,11 +424,13 @@ Statuts de commande materialises par `order-service` :
 
 Cette approche simule un pattern inbox/read-model utilise en production pour debug, replay controle et audit.
 
+`inventory-service` applique aussi une inbox : `eventId` est la cle d'idempotence, tandis que `orderId` reste un contexte d'audit.
+
 ## Anti Double Paiement
 `payment-service` combine :
 - `orderId` comme idempotency key
 - table `payment_transactions` avec `order_id` unique
-- table `processed_events`
+- table `processed_events` indexee par `eventId` pour dedupliquer les messages Kafka
 - transaction Spring
 - transactional outbox dans `outbox_events`
 - producer Kafka idempotent

@@ -94,7 +94,7 @@ Ameliorations cible :
 - backoff configurable
 - dead outbox apres seuil d'echec
 - retention/archivage
-- idempotence cote consommateur via inbox
+- idempotence cote consommateur via inbox indexee par `eventId`
 
 ## Securite
 

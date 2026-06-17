@@ -48,7 +48,7 @@ class PaymentServiceTest {
     @Test
     void processPaymentPublishesSuccessEventAndMarksOrderAsProcessed() {
         OrderCreatedEvent event = orderCreatedEvent("order-1", BigDecimal.valueOf(250));
-        when(processedEventRepository.existsById(event.getOrderId())).thenReturn(false);
+        when(processedEventRepository.existsById(event.getEventId())).thenReturn(false);
         when(paymentTransactionRepository.saveAndFlush(any(PaymentTransaction.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -75,13 +75,14 @@ class PaymentServiceTest {
         assertThat(paymentEvent.getCustomerEmail()).isEqualTo(event.getCustomerEmail());
         assertThat(transaction.getOrderId()).isEqualTo(event.getOrderId());
         assertThat(transaction.getStatus()).isEqualTo(PaymentStatus.SUCCESS);
+        assertThat(processedEventCaptor.getValue().getEventId()).isEqualTo(event.getEventId());
         assertThat(processedEventCaptor.getValue().getOrderId()).isEqualTo(event.getOrderId());
     }
 
     @Test
     void processPaymentSkipsAlreadyProcessedOrder() {
         OrderCreatedEvent event = orderCreatedEvent("order-1", BigDecimal.valueOf(250));
-        when(processedEventRepository.existsById(event.getOrderId())).thenReturn(true);
+        when(processedEventRepository.existsById(event.getEventId())).thenReturn(true);
 
         paymentService.processPayment(event);
 
@@ -96,7 +97,7 @@ class PaymentServiceTest {
     @Test
     void processPaymentPublishesFailureEventWhenAmountExceedsThreshold() {
         OrderCreatedEvent event = orderCreatedEvent("order-1", BigDecimal.valueOf(501));
-        when(processedEventRepository.existsById(event.getOrderId())).thenReturn(false);
+        when(processedEventRepository.existsById(event.getEventId())).thenReturn(false);
         when(paymentTransactionRepository.saveAndFlush(any(PaymentTransaction.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -123,6 +124,7 @@ class PaymentServiceTest {
         assertThat(failedEvent.getCustomerEmail()).isEqualTo(event.getCustomerEmail());
         assertThat(transaction.getOrderId()).isEqualTo(event.getOrderId());
         assertThat(transaction.getStatus()).isEqualTo(PaymentStatus.FAILED);
+        assertThat(processedEventCaptor.getValue().getEventId()).isEqualTo(event.getEventId());
         assertThat(processedEventCaptor.getValue().getOrderId()).isEqualTo(event.getOrderId());
     }
 

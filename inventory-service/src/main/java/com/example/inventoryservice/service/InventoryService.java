@@ -25,20 +25,20 @@ public class InventoryService {
     private final ProcessedEventRepository processedEventRepository;
 
     public void updateInventory(PaymentProcessedEvent event) {
-        if (processedEventRepository.existsById(event.getOrderId())) {
-            log.warn("Already updated inventory for orderId={}", event.getOrderId());
+        if (processedEventRepository.existsById(event.getEventId())) {
+            log.warn("Already processed inventory event eventId={} orderId={}", event.getEventId(), event.getOrderId());
             return;
         }
 
         if (!SUCCESS_PAYMENT_STATUS.equals(event.getPaymentStatus())) {
             publishInventoryFailure(event, "Payment status is not successful");
-            processedEventRepository.save(new ProcessedEvent(event.getOrderId()));
+            processedEventRepository.save(new ProcessedEvent(event.getEventId(), event.getOrderId()));
             return;
         }
 
         if (event.getOrderId().startsWith(INVENTORY_FAILURE_ORDER_PREFIX)) {
             publishInventoryFailure(event, "Inventory is not available");
-            processedEventRepository.save(new ProcessedEvent(event.getOrderId()));
+            processedEventRepository.save(new ProcessedEvent(event.getEventId(), event.getOrderId()));
             return;
         }
 
@@ -57,7 +57,7 @@ public class InventoryService {
         );
 
         inventoryProducer.send(inventoryEvent);
-        processedEventRepository.save(new ProcessedEvent(event.getOrderId()));
+        processedEventRepository.save(new ProcessedEvent(event.getEventId(), event.getOrderId()));
     }
 
     private void publishInventoryFailure(PaymentProcessedEvent event, String reason) {

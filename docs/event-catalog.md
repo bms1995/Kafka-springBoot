@@ -34,6 +34,7 @@ Every event must carry:
 - When a schema is shared by multiple services, every copy must be identical.
 - New optional fields should define Avro defaults.
 - Removing or renaming fields is a breaking change.
+- Consumer inbox tables must deduplicate by `eventId`; aggregate identifiers such as `orderId` are audit context, not inbox keys.
 - Topic names are configurable through `app.kafka.topics.*` and environment variables.
 - Docker Compose provisions all business topics and matching `.DLQ` topics through `kafka-init`.
 
