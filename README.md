@@ -483,12 +483,16 @@ Metrics :
 - metriques payment/outbox :
   - `order_outbox_published_total`
   - `order_outbox_publish_failed_total`
+  - `order_outbox_pending_events`
+  - `order_outbox_dead_events`
   - `payment_succeeded_total`
   - `payment_failed_total`
   - `payment_duplicate_skipped_total`
   - `payment_refunded_total`
   - `payment_outbox_published_total`
   - `payment_outbox_publish_failed_total`
+  - `payment_outbox_pending_events`
+  - `payment_outbox_dead_events`
 
 Alertes Prometheus :
 - `monitoring/alerts.yml`
