@@ -33,6 +33,38 @@ function Assert-HttpOk {
     }
 }
 
+function Get-Order {
+    param(
+        [string]$OrderId
+    )
+
+    Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/orders/$OrderId" -Headers @{ "X-API-Key" = $ApiKey }
+}
+
+function Assert-OrderStatus {
+    param(
+        [string]$OrderId,
+        [string]$ExpectedStatus,
+        [int]$TimeoutSeconds = 60,
+        [int]$IntervalSeconds = 2
+    )
+
+    $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+    $lastStatus = "<not read>"
+
+    while ((Get-Date) -lt $deadline) {
+        $order = Get-Order $OrderId
+        $lastStatus = $order.status
+        if ($lastStatus -eq $ExpectedStatus) {
+            return
+        }
+
+        Start-Sleep -Seconds $IntervalSeconds
+    }
+
+    throw "Expected order $OrderId to reach status $ExpectedStatus within $TimeoutSeconds seconds, last status was $lastStatus"
+}
+
 Write-Host "Checking API Gateway health..."
 Assert-HttpOk "$BaseUrl/actuator/health/readiness"
 
@@ -51,7 +83,9 @@ Invoke-JsonPost "$BaseUrl/api/orders" '{"orderId":"fail-inventory-smoke-1","prod
 Start-Sleep -Seconds $SettleSeconds
 
 Write-Host "Checking materialized order read model..."
-Assert-HttpOk "$BaseUrl/api/orders/smoke-success-1" -UseApiKey
+Assert-OrderStatus "smoke-success-1" "INVENTORY_CONFIRMED"
+Assert-OrderStatus "smoke-payment-failed-1" "PAYMENT_FAILED"
+Assert-OrderStatus "fail-inventory-smoke-1" "REFUNDED"
 Assert-HttpOk "$BaseUrl/api/orders/smoke-success-1/events" -UseApiKey
 
 if ($SchemaRegistryUrl) {
