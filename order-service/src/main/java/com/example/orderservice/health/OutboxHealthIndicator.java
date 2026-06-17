@@ -1,7 +1,7 @@
-package com.example.paymentservice.health;
+package com.example.orderservice.health;
 
-import com.example.paymentservice.entity.OutboxStatus;
-import com.example.paymentservice.repository.OutboxEventRepository;
+import com.example.orderservice.entity.OutboxStatus;
+import com.example.orderservice.repository.OutboxEventRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;

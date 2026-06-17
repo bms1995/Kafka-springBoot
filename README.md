@@ -476,6 +476,7 @@ Health :
 - payment-service : http://localhost:8082/actuator/health
 - notification-service : http://localhost:8083/actuator/health
 - inventory-service : http://localhost:8084/actuator/health
+- `order-service` et `payment-service` passent en health `DOWN` si l'outbox depasse 100 evenements pending ou contient des evenements `DEAD`
 
 Metrics :
 - `/actuator/prometheus` sur chaque service
