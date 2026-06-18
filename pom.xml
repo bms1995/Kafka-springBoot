@@ -37,6 +37,7 @@
     <docker-java.version>3.5.1</docker-java.version>
     <build-helper-maven-plugin.version>3.5.0</build-helper-maven-plugin.version>
     <jacoco.version>0.8.12</jacoco.version>
+    <spotbugs.version>4.8.6.6</spotbugs.version>
     <spotless.version>2.44.0</spotless.version>
     <jacoco.minimum.instruction.coverage>0.30</jacoco.minimum.instruction.coverage>
     <jacoco.check.skip>false</jacoco.check.skip>
@@ -225,6 +226,26 @@
               <goal>check</goal>
             </goals>
             <phase>validate</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>com.github.spotbugs</groupId>
+        <artifactId>spotbugs-maven-plugin</artifactId>
+        <version>${spotbugs.version}</version>
+        <configuration>
+          <effort>Max</effort>
+          <threshold>High</threshold>
+          <failOnError>true</failOnError>
+          <excludeFilterFile>${maven.multiModuleProjectDirectory}/config/spotbugs/exclude.xml</excludeFilterFile>
+        </configuration>
+        <executions>
+          <execution>
+            <id>spotbugs-check</id>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <phase>verify</phase>
           </execution>
         </executions>
       </plugin>
