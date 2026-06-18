@@ -13,6 +13,7 @@ spec:
       labels:
         app: notification-service
     spec:
+      priorityClassName: kafka-spring-critical
       securityContext:
         runAsNonRoot: true
         runAsUser: 10001
@@ -61,6 +62,13 @@ spec:
       volumes:
         - name: tmp
           emptyDir: {}
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: notification-service
 ---
 apiVersion: v1
 kind: Service

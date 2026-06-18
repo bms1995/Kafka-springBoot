@@ -61,6 +61,17 @@ Invoke-RestMethod -Method Post `
 - Autoscaling horizontal avec HPA de 2 a 5 replicas par service
 - NetworkPolicy pour limiter le trafic entrant vers les services
 - PodDisruptionBudget pour garder au moins 1 pod disponible par service pendant les maintenances
+- ResourceQuota et LimitRange pour cadrer la consommation CPU/memoire du namespace
+- PriorityClass applicative pour les workloads critiques
+- Topology spread constraints pour repartir les replicas quand plusieurs nodes sont disponibles
+
+## Add-ons optionnels
+
+Ces dossiers exigent des operators/CRD supplementaires et ne sont pas inclus dans le socle `k8s` :
+
+- `k8s/observability` : `ServiceMonitor` et `PrometheusRule` pour Prometheus Operator
+- `k8s/progressive` : canary `Rollout` et `AnalysisTemplate` pour Argo Rollouts
+- `k8s/policies` : policies Kyverno en mode `Audit` pour durcissement runtime et ressources
 
 ## A faire pour une vraie production
 
@@ -69,3 +80,4 @@ Invoke-RestMethod -Method Post `
 - Utiliser un secret manager externe
 - Ajouter Ingress avec TLS
 - Ajouter ServiceMonitor Prometheus Operator
+- Ajouter validation policy-as-code des manifests et admission control

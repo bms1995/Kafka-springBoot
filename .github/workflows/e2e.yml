@@ -1,0 +1,71 @@
+name: E2E
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - docker-compose.yml
+      - scripts/smoke-test.ps1
+      - "**/src/main/**"
+      - "**/pom.xml"
+      - pom.xml
+
+permissions:
+  contents: read
+
+jobs:
+  docker-compose-e2e:
+    name: Docker Compose Saga E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Build service jars
+        run: mvn -DskipTests package
+
+      - name: Start stack
+        run: docker compose up -d --build
+
+      - name: Wait for gateway
+        shell: pwsh
+        run: |
+          $deadline = (Get-Date).AddMinutes(8)
+          do {
+            try {
+              $response = Invoke-WebRequest -Uri "http://localhost:8080/actuator/health/readiness" -UseBasicParsing -TimeoutSec 5
+              if ($response.StatusCode -ge 200 -and $response.StatusCode -lt 300) {
+                exit 0
+              }
+            } catch {
+              Start-Sleep -Seconds 5
+            }
+          } while ((Get-Date) -lt $deadline)
+          docker compose ps
+          docker compose logs --tail=200
+          throw "API Gateway did not become ready"
+
+      - name: Run Saga smoke test
+        shell: pwsh
+        run: ./scripts/smoke-test.ps1 -BaseUrl http://localhost:8080 -SchemaRegistryUrl http://localhost:8086
+
+      - name: Collect logs on failure
+        if: failure()
+        run: |
+          docker compose ps
+          docker compose logs --tail=300
+
+      - name: Stop stack
+        if: always()
+        run: docker compose down -v

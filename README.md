@@ -393,6 +393,28 @@ Smoke test complet :
 .\scripts\smoke-test.ps1
 ```
 
+Test de charge court avec k6 :
+
+```powershell
+k6 run .\tests\load\k6-smoke.js
+```
+
+Profils de charge supplementaires :
+
+```powershell
+k6 run .\tests\load\k6-spike.js
+$env:VUS=10; $env:DURATION="10m"; k6 run .\tests\load\k6-endurance.js
+```
+
+Artefacts production-candidate :
+- service catalog : `docs/catalog/services.yaml`
+- runbooks : `docs/runbooks`
+- operations Kafka : `docs/kafka-operations.md`
+- tests de charge : `docs/performance/load-testing.md`
+- manifests Prometheus Operator optionnels : `k8s/observability`
+- manifests Argo Rollouts optionnels : `k8s/progressive`
+- policies Kyverno optionnelles : `k8s/policies`
+
 ## Flux Saga
 1. `order-service` persiste la commande et enqueue `order-created` dans son outbox
 2. `payment-service` consomme `order-created`

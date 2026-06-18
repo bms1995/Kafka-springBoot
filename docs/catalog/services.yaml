@@ -1,0 +1,96 @@
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: kafka-spring-commerce
+  description: Event-driven commerce demo with Kafka, Saga, outbox, Kubernetes and observability.
+spec:
+  owner: platform-team
+  domain: commerce
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: api-gateway
+  description: Customer-facing HTTP entrypoint with API key/JWT support, rate limiting and circuit breakers.
+  annotations:
+    kafka-spring/slo-availability: "99.9"
+    kafka-spring/runbook: docs/runbooks/api-gateway.md
+spec:
+  type: service
+  lifecycle: production-candidate
+  owner: edge-platform
+  system: kafka-spring-commerce
+  dependsOn:
+    - component:order-service
+    - component:payment-service
+    - component:inventory-service
+    - component:notification-service
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: order-service
+  description: Order write model, Saga state, order event history and transactional outbox.
+  annotations:
+    kafka-spring/slo-availability: "99.9"
+    kafka-spring/runbook: docs/runbooks/saga-operations.md
+spec:
+  type: service
+  lifecycle: production-candidate
+  owner: order-domain
+  system: kafka-spring-commerce
+  providesApis:
+    - order-http-api
+  consumesApis:
+    - kafka-payment-events
+    - kafka-inventory-events
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: payment-service
+  description: Idempotent payment processing, payment compensation and transactional outbox.
+  annotations:
+    kafka-spring/slo-availability: "99.9"
+    kafka-spring/runbook: docs/runbooks/outbox-dlq.md
+spec:
+  type: service
+  lifecycle: production-candidate
+  owner: payment-domain
+  system: kafka-spring-commerce
+  consumesApis:
+    - kafka-order-events
+    - kafka-inventory-events
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: inventory-service
+  description: Inventory reservation simulation with consumer idempotence.
+  annotations:
+    kafka-spring/slo-availability: "99.5"
+    kafka-spring/runbook: docs/runbooks/outbox-dlq.md
+spec:
+  type: service
+  lifecycle: production-candidate
+  owner: inventory-domain
+  system: kafka-spring-commerce
+  consumesApis:
+    - kafka-payment-events
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: notification-service
+  description: Notification consumer for confirmed, failed and refunded order flows.
+  annotations:
+    kafka-spring/slo-availability: "99.0"
+    kafka-spring/runbook: docs/runbooks/outbox-dlq.md
+spec:
+  type: service
+  lifecycle: production-candidate
+  owner: customer-communications
+  system: kafka-spring-commerce
+  consumesApis:
+    - kafka-payment-events
+    - kafka-inventory-events

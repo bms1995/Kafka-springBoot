@@ -1,13 +1,31 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
 metadata:
   name: api-gateway
   namespace: kafka-spring
 spec:
   replicas: 2
+  revisionHistoryLimit: 3
   selector:
     matchLabels:
       app: api-gateway
+  strategy:
+    canary:
+      steps:
+        - setWeight: 10
+        - pause:
+            duration: 60s
+        - setWeight: 50
+        - pause:
+            duration: 120s
+        - setWeight: 100
+      analysis:
+        templates:
+          - templateName: api-gateway-slo
+        startingStep: 1
+        args:
+          - name: service-name
+            value: api-gateway
   template:
     metadata:
       labels:
@@ -22,7 +40,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: api-gateway
-          image: kafka-springboot/api-gateway:local
+          image: ghcr.io/bms1995/kafka-springboot/api-gateway:latest
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
@@ -70,16 +88,37 @@ spec:
             matchLabels:
               app: api-gateway
 ---
-apiVersion: v1
-kind: Service
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
 metadata:
-  name: api-gateway
+  name: api-gateway-slo
   namespace: kafka-spring
 spec:
-  type: LoadBalancer
-  selector:
-    app: api-gateway
-  ports:
-    - name: http
-      port: 8080
-      targetPort: 8080
+  args:
+    - name: service-name
+  metrics:
+    - name: gateway-5xx-rate
+      interval: 30s
+      count: 3
+      successCondition: result[0] < 0.02
+      failureLimit: 1
+      provider:
+        prometheus:
+          address: http://prometheus-operated.monitoring:9090
+          query: |
+            sum(rate(http_server_requests_seconds_count{application="{{args.service-name}}",status=~"5.."}[2m]))
+            /
+            clamp_min(sum(rate(http_server_requests_seconds_count{application="{{args.service-name}}"}[2m])), 1)
+    - name: gateway-p95-latency
+      interval: 30s
+      count: 3
+      successCondition: result[0] < 1
+      failureLimit: 1
+      provider:
+        prometheus:
+          address: http://prometheus-operated.monitoring:9090
+          query: |
+            histogram_quantile(
+              0.95,
+              sum(rate(http_server_requests_seconds_bucket{application="{{args.service-name}}"}[2m])) by (le)
+            )

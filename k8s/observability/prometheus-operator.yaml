@@ -1,0 +1,65 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: kafka-spring-services
+  namespace: kafka-spring
+  labels:
+    release: prometheus
+spec:
+  selector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - api-gateway
+          - order-service
+          - payment-service
+          - inventory-service
+          - notification-service
+  namespaceSelector:
+    matchNames:
+      - kafka-spring
+  endpoints:
+    - port: http
+      path: /actuator/prometheus
+      interval: 15s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: kafka-spring-slo-alerts
+  namespace: kafka-spring
+  labels:
+    release: prometheus
+spec:
+  groups:
+    - name: kafka-spring.slo
+      rules:
+        - alert: GatewayHigh5xxRate
+          expr: sum(rate(http_server_requests_seconds_count{status=~"5..", application="api-gateway"}[5m])) > 1
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "API Gateway 5xx rate is high"
+        - alert: GatewayLatencyP95High
+          expr: histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{application="api-gateway"}[5m])) by (le)) > 1
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "API Gateway p95 latency is above 1 second"
+        - alert: SagaFailureSpike
+          expr: increase(payment_failed_total[10m]) + increase(payment_refunded_total[10m]) > 10
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Saga failure or compensation volume increased"
+        - alert: OutboxDeadEvents
+          expr: order_outbox_dead_events + payment_outbox_dead_events > 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Dead outbox events require operator review"

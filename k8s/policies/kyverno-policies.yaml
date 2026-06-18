@@ -1,0 +1,85 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: kafka-spring-require-runtime-hardening
+spec:
+  validationFailureAction: Audit
+  background: true
+  rules:
+    - name: require-non-root
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - kafka-spring
+      validate:
+        message: "Pods must run as non-root."
+        pattern:
+          spec:
+            securityContext:
+              runAsNonRoot: true
+    - name: require-seccomp-runtime-default
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - kafka-spring
+      validate:
+        message: "Pods must use the RuntimeDefault seccomp profile."
+        pattern:
+          spec:
+            securityContext:
+              seccompProfile:
+                type: RuntimeDefault
+    - name: require-container-hardening
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - kafka-spring
+      validate:
+        message: "Containers must drop Linux capabilities, disable privilege escalation and use a read-only root filesystem."
+        foreach:
+          - list: request.object.spec.containers[]
+            pattern:
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop:
+                    - ALL
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: kafka-spring-require-resources
+spec:
+  validationFailureAction: Audit
+  background: true
+  rules:
+    - name: require-requests-and-limits
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - kafka-spring
+      validate:
+        message: "Containers must define CPU and memory requests and limits."
+        foreach:
+          - list: request.object.spec.containers[]
+            pattern:
+              resources:
+                requests:
+                  cpu: "?*"
+                  memory: "?*"
+                limits:
+                  cpu: "?*"
+                  memory: "?*"

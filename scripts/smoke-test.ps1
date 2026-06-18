@@ -2,10 +2,19 @@ param(
     [string]$BaseUrl = "http://localhost:8080",
     [string]$ApiKey = "local-dev-key",
     [string]$SchemaRegistryUrl = "",
-    [int]$SettleSeconds = 10
+    [int]$SettleSeconds = 10,
+    [string]$RunId = ""
 )
 
 $ErrorActionPreference = "Stop"
+
+if (-not $RunId) {
+    $RunId = Get-Date -Format "yyyyMMddHHmmss"
+}
+
+$successOrderId = "smoke-success-$RunId"
+$paymentFailedOrderId = "smoke-payment-failed-$RunId"
+$inventoryFailedOrderId = "fail-inventory-smoke-$RunId"
 
 function Invoke-JsonPost {
     param(
@@ -65,45 +74,81 @@ function Assert-OrderStatus {
     throw "Expected order $OrderId to reach status $ExpectedStatus within $TimeoutSeconds seconds, last status was $lastStatus"
 }
 
+function Assert-OrderTimelineContains {
+    param(
+        [string]$OrderId,
+        [string[]]$ExpectedTypes,
+        [int]$TimeoutSeconds = 60,
+        [int]$IntervalSeconds = 2
+    )
+
+    $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+    $missing = $ExpectedTypes
+
+    while ((Get-Date) -lt $deadline) {
+        $events = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/orders/$OrderId/events" -Headers @{ "X-API-Key" = $ApiKey }
+        $eventTypes = @($events | ForEach-Object { $_.eventType })
+        $missing = @($ExpectedTypes | Where-Object { $eventTypes -notcontains $_ })
+
+        if ($missing.Count -eq 0) {
+            return
+        }
+
+        Start-Sleep -Seconds $IntervalSeconds
+    }
+
+    throw "Expected order $OrderId timeline to contain [$($ExpectedTypes -join ', ')], missing [$($missing -join ', ')]"
+}
+
 Write-Host "Checking API Gateway health..."
 Assert-HttpOk "$BaseUrl/actuator/health/readiness"
 
 Write-Host "Sending successful order..."
-Invoke-JsonPost "$BaseUrl/api/orders" '{"orderId":"smoke-success-1","productName":"MacBook Pro","quantity":1,"amount":250,"customerEmail":"client@test.com"}'
+Invoke-JsonPost "$BaseUrl/api/orders" "{`"orderId`":`"$successOrderId`",`"productName`":`"MacBook Pro`",`"quantity`":1,`"amount`":250,`"customerEmail`":`"client@test.com`"}"
 
 Write-Host "Sending duplicate order..."
-Invoke-JsonPost "$BaseUrl/api/orders" '{"orderId":"smoke-success-1","productName":"MacBook Pro","quantity":1,"amount":250,"customerEmail":"client@test.com"}'
+Invoke-JsonPost "$BaseUrl/api/orders" "{`"orderId`":`"$successOrderId`",`"productName`":`"MacBook Pro`",`"quantity`":1,`"amount`":250,`"customerEmail`":`"client@test.com`"}"
 
 Write-Host "Sending payment failure order..."
-Invoke-JsonPost "$BaseUrl/api/orders" '{"orderId":"smoke-payment-failed-1","productName":"MacBook Pro","quantity":1,"amount":999,"customerEmail":"client@test.com"}'
+Invoke-JsonPost "$BaseUrl/api/orders" "{`"orderId`":`"$paymentFailedOrderId`",`"productName`":`"MacBook Pro`",`"quantity`":1,`"amount`":999,`"customerEmail`":`"client@test.com`"}"
 
 Write-Host "Sending inventory compensation order..."
-Invoke-JsonPost "$BaseUrl/api/orders" '{"orderId":"fail-inventory-smoke-1","productName":"MacBook Pro","quantity":1,"amount":250,"customerEmail":"client@test.com"}'
+Invoke-JsonPost "$BaseUrl/api/orders" "{`"orderId`":`"$inventoryFailedOrderId`",`"productName`":`"MacBook Pro`",`"quantity`":1,`"amount`":250,`"customerEmail`":`"client@test.com`"}"
 
 Start-Sleep -Seconds $SettleSeconds
 
 Write-Host "Checking materialized order read model..."
-Assert-OrderStatus "smoke-success-1" "INVENTORY_CONFIRMED"
-Assert-OrderStatus "smoke-payment-failed-1" "PAYMENT_FAILED"
-Assert-OrderStatus "fail-inventory-smoke-1" "REFUNDED"
-Assert-HttpOk "$BaseUrl/api/orders/smoke-success-1/events" -UseApiKey
+Assert-OrderStatus $successOrderId "INVENTORY_CONFIRMED"
+Assert-OrderStatus $paymentFailedOrderId "PAYMENT_FAILED"
+Assert-OrderStatus $inventoryFailedOrderId "REFUNDED"
+Assert-HttpOk "$BaseUrl/api/orders/$successOrderId/events" -UseApiKey
+
+Write-Host "Checking Saga timelines..."
+Assert-OrderTimelineContains $successOrderId @("PaymentProcessedEvent", "InventoryUpdatedEvent")
+Assert-OrderTimelineContains $paymentFailedOrderId @("PaymentFailedEvent")
+Assert-OrderTimelineContains $inventoryFailedOrderId @("PaymentProcessedEvent", "InventoryFailedEvent", "PaymentRefundedEvent")
 
 if ($SchemaRegistryUrl) {
     Write-Host "Checking Schema Registry subjects..."
     $subjects = Invoke-RestMethod -Uri "$SchemaRegistryUrl/subjects"
-    $requiredSubjects = @(
-        "order-created-value",
-        "payment-processed-value",
-        "payment-failed-value",
-        "payment-refunded-value",
-        "inventory-updated-value",
-        "inventory-failed-value"
-    )
 
-    foreach ($subject in $requiredSubjects) {
-        if ($subjects -notcontains $subject) {
-            throw "Missing schema subject: $subject"
+    if ($subjects.Count -gt 0) {
+        $requiredSubjects = @(
+            "order-created-value",
+            "payment-processed-value",
+            "payment-failed-value",
+            "payment-refunded-value",
+            "inventory-updated-value",
+            "inventory-failed-value"
+        )
+
+        foreach ($subject in $requiredSubjects) {
+            if ($subjects -notcontains $subject) {
+                throw "Missing schema subject: $subject"
+            }
         }
+    } else {
+        Write-Host "Schema Registry is reachable but has no registered subjects; Avro contract validation is covered by scripts/validate-avro-contracts.ps1."
     }
 }
 

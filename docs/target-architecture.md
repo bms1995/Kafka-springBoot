@@ -11,6 +11,11 @@ Ce document decrit la cible d'architecture pour faire evoluer le projet vers une
 - Deploiements reproductibles par environnement avec Kustomize
 - Secrets et configuration separes du code
 - Observabilite obligatoire : logs correles, metriques, traces, alertes
+- Ownership par domaine : code, base, contrats, SLO et runbooks appartiennent au service
+- Graceful degradation : une panne partielle doit degrader le parcours sans bloquer toute la plateforme
+- Images immuables et rollbacks par SHA
+
+Voir aussi `docs/hyperscale-architecture.md` pour le track d'evolution inspire Zalando, Amazon et Netflix.
 
 ## Environnements
 
@@ -142,3 +147,13 @@ Rollback :
 
 - redeployer un tag SHA precedent
 - ne jamais dependre de `latest` pour une remediation production
+
+## Plateforme
+
+La cible plateforme ajoute des garde-fous communs a tous les services :
+
+- quotas et limites de namespace pour eviter qu'un service consomme tout le cluster
+- priorite Kubernetes pour les workloads applicatifs critiques
+- repartition des replicas sur plusieurs nodes quand le cluster le permet
+- service catalog interne avec ownership, dependances, SLO, dashboards et runbooks
+- validation policy-as-code des manifests avant deploiement
