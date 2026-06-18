@@ -37,6 +37,7 @@
     <docker-java.version>3.5.1</docker-java.version>
     <build-helper-maven-plugin.version>3.5.0</build-helper-maven-plugin.version>
     <jacoco.version>0.8.12</jacoco.version>
+    <pmd.version>3.24.0</pmd.version>
     <spotbugs.version>4.8.6.6</spotbugs.version>
     <spotless.version>2.44.0</spotless.version>
     <jacoco.minimum.instruction.coverage>0.30</jacoco.minimum.instruction.coverage>
@@ -242,6 +243,31 @@
         <executions>
           <execution>
             <id>spotbugs-check</id>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <phase>verify</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-pmd-plugin</artifactId>
+        <version>${pmd.version}</version>
+        <configuration>
+          <failOnViolation>true</failOnViolation>
+          <targetJdk>21</targetJdk>
+          <printFailingErrors>true</printFailingErrors>
+          <excludeRoots>
+            <excludeRoot>${project.basedir}/target/generated-sources</excludeRoot>
+          </excludeRoots>
+          <rulesets>
+            <ruleset>category/java/errorprone.xml</ruleset>
+          </rulesets>
+        </configuration>
+        <executions>
+          <execution>
+            <id>pmd-check</id>
             <goals>
               <goal>check</goal>
             </goals>

@@ -39,12 +39,12 @@ public final class KafkaErrorHandlers {
     handler.setRetryListeners(
         (record, ex, deliveryAttempt) ->
             log.warn(
-                "Retry attempt {} for topic={}, key={}, value={}",
+                "Retry attempt {} for topic={}, key={}, value={}, cause={}",
                 deliveryAttempt,
                 record.topic(),
                 record.key(),
                 record.value(),
-                ex));
+                ex.getMessage()));
 
     return handler;
   }
