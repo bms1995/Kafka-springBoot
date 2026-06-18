@@ -101,7 +101,15 @@ jobs:
       - name: Test ${{ matrix.service }}
         env:
           TESTCONTAINERS_CHECKS_DISABLE: "true"
-        run: mvn -pl ${{ matrix.service }} -am test
+        run: mvn -pl ${{ matrix.service }} -am verify
+
+      - name: Upload JaCoCo report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-${{ matrix.service }}
+          path: ${{ matrix.service }}/target/site/jacoco/
+          if-no-files-found: ignore
 
   security-scan:
     name: Security scan
