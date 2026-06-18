@@ -11,15 +11,15 @@ import org.springframework.security.oauth2.jwt.ReactiveJwtDecoders;
 @EnableConfigurationProperties(JwtProperties.class)
 public class JwtDecoderConfig {
 
-    @Bean
-    @ConditionalOnMissingBean
-    ReactiveJwtDecoder reactiveJwtDecoder(JwtProperties properties) {
-        if (!properties.enabled() || !properties.hasIssuerUri()) {
-            return token -> reactor.core.publisher.Mono.error(
-                    new IllegalStateException("JWT authentication is not configured")
-            );
-        }
-
-        return ReactiveJwtDecoders.fromIssuerLocation(properties.issuerUri());
+  @Bean
+  @ConditionalOnMissingBean
+  ReactiveJwtDecoder reactiveJwtDecoder(JwtProperties properties) {
+    if (!properties.enabled() || !properties.hasIssuerUri()) {
+      return token ->
+          reactor.core.publisher.Mono.error(
+              new IllegalStateException("JWT authentication is not configured"));
     }
+
+    return ReactiveJwtDecoders.fromIssuerLocation(properties.issuerUri());
+  }
 }

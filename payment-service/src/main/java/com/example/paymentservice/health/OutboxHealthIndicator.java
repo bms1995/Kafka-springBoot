@@ -11,26 +11,26 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class OutboxHealthIndicator implements HealthIndicator {
 
-    private static final long PENDING_EVENTS_WARNING_THRESHOLD = 100;
+  private static final long PENDING_EVENTS_WARNING_THRESHOLD = 100;
 
-    private final OutboxEventRepository outboxEventRepository;
+  private final OutboxEventRepository outboxEventRepository;
 
-    @Override
-    public Health health() {
-        long pendingEvents = outboxEventRepository.countByStatus(OutboxStatus.PENDING);
-        long deadEvents = outboxEventRepository.countByStatus(OutboxStatus.DEAD);
+  @Override
+  public Health health() {
+    long pendingEvents = outboxEventRepository.countByStatus(OutboxStatus.PENDING);
+    long deadEvents = outboxEventRepository.countByStatus(OutboxStatus.DEAD);
 
-        if (deadEvents > 0 || pendingEvents > PENDING_EVENTS_WARNING_THRESHOLD) {
-            return Health.down()
-                    .withDetail("pendingEvents", pendingEvents)
-                    .withDetail("deadEvents", deadEvents)
-                    .withDetail("threshold", PENDING_EVENTS_WARNING_THRESHOLD)
-                    .build();
-        }
-
-        return Health.up()
-                .withDetail("pendingEvents", pendingEvents)
-                .withDetail("deadEvents", deadEvents)
-                .build();
+    if (deadEvents > 0 || pendingEvents > PENDING_EVENTS_WARNING_THRESHOLD) {
+      return Health.down()
+          .withDetail("pendingEvents", pendingEvents)
+          .withDetail("deadEvents", deadEvents)
+          .withDetail("threshold", PENDING_EVENTS_WARNING_THRESHOLD)
+          .build();
     }
+
+    return Health.up()
+        .withDetail("pendingEvents", pendingEvents)
+        .withDetail("deadEvents", deadEvents)
+        .build();
+  }
 }

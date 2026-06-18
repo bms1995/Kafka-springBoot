@@ -10,44 +10,42 @@ import org.springframework.util.backoff.FixedBackOff;
 
 public final class KafkaErrorHandlers {
 
-    public static final long DEFAULT_RETRY_INTERVAL_MS = 2000L;
-    public static final long DEFAULT_MAX_RETRY_ATTEMPTS = 3L;
+  public static final long DEFAULT_RETRY_INTERVAL_MS = 2000L;
+  public static final long DEFAULT_MAX_RETRY_ATTEMPTS = 3L;
 
-    private KafkaErrorHandlers() {
-    }
+  private KafkaErrorHandlers() {}
 
-    public static DefaultErrorHandler deadLetterErrorHandler(
-            KafkaTemplate<Object, Object> kafkaTemplate,
-            Logger log
-    ) {
-        return deadLetterErrorHandler(kafkaTemplate, log, DEFAULT_RETRY_INTERVAL_MS, DEFAULT_MAX_RETRY_ATTEMPTS);
-    }
+  public static DefaultErrorHandler deadLetterErrorHandler(
+      KafkaTemplate<Object, Object> kafkaTemplate, Logger log) {
+    return deadLetterErrorHandler(
+        kafkaTemplate, log, DEFAULT_RETRY_INTERVAL_MS, DEFAULT_MAX_RETRY_ATTEMPTS);
+  }
 
-    public static DefaultErrorHandler deadLetterErrorHandler(
-            KafkaTemplate<Object, Object> kafkaTemplate,
-            Logger log,
-            long retryIntervalMs,
-            long maxRetryAttempts
-    ) {
-        DeadLetterPublishingRecoverer recoverer = new DeadLetterPublishingRecoverer(
-                kafkaTemplate,
-                (record, ex) -> new TopicPartition(EventTopics.deadLetterTopic(record.topic()), record.partition())
-        );
+  public static DefaultErrorHandler deadLetterErrorHandler(
+      KafkaTemplate<Object, Object> kafkaTemplate,
+      Logger log,
+      long retryIntervalMs,
+      long maxRetryAttempts) {
+    DeadLetterPublishingRecoverer recoverer =
+        new DeadLetterPublishingRecoverer(
+            kafkaTemplate,
+            (record, ex) ->
+                new TopicPartition(
+                    EventTopics.deadLetterTopic(record.topic()), record.partition()));
 
-        DefaultErrorHandler handler = new DefaultErrorHandler(
-                recoverer,
-                new FixedBackOff(retryIntervalMs, maxRetryAttempts)
-        );
+    DefaultErrorHandler handler =
+        new DefaultErrorHandler(recoverer, new FixedBackOff(retryIntervalMs, maxRetryAttempts));
 
-        handler.setRetryListeners((record, ex, deliveryAttempt) ->
-                log.warn("Retry attempt {} for topic={}, key={}, value={}",
-                        deliveryAttempt,
-                        record.topic(),
-                        record.key(),
-                        record.value(),
-                        ex)
-        );
+    handler.setRetryListeners(
+        (record, ex, deliveryAttempt) ->
+            log.warn(
+                "Retry attempt {} for topic={}, key={}, value={}",
+                deliveryAttempt,
+                record.topic(),
+                record.key(),
+                record.value(),
+                ex));
 
-        return handler;
-    }
+    return handler;
+  }
 }

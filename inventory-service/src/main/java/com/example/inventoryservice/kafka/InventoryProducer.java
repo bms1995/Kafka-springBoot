@@ -13,21 +13,21 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class InventoryProducer {
 
-    private final KafkaTemplate<String, Object> kafkaTemplate;
+  private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    @Value("${app.kafka.topics.inventory-updated:inventory-updated}")
-    private String inventoryUpdatedTopic;
+  @Value("${app.kafka.topics.inventory-updated:inventory-updated}")
+  private String inventoryUpdatedTopic;
 
-    @Value("${app.kafka.topics.inventory-failed:inventory-failed}")
-    private String inventoryFailedTopic;
+  @Value("${app.kafka.topics.inventory-failed:inventory-failed}")
+  private String inventoryFailedTopic;
 
-    public void send(InventoryUpdatedEvent event) {
-        kafkaTemplate.send(inventoryUpdatedTopic, event.getOrderId(), event);
-        log.info("Published inventory-updated event: {}", event);
-    }
+  public void send(InventoryUpdatedEvent event) {
+    kafkaTemplate.send(inventoryUpdatedTopic, event.getOrderId(), event);
+    log.info("Published inventory-updated event: {}", event);
+  }
 
-    public void sendFailure(InventoryFailedEvent event) {
-        kafkaTemplate.send(inventoryFailedTopic, event.getOrderId(), event);
-        log.info("Published inventory-failed event: {}", event);
-    }
+  public void sendFailure(InventoryFailedEvent event) {
+    kafkaTemplate.send(inventoryFailedTopic, event.getOrderId(), event);
+    log.info("Published inventory-failed event: {}", event);
+  }
 }

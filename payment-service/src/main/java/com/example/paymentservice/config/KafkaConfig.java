@@ -11,8 +11,8 @@ import org.springframework.kafka.listener.DefaultErrorHandler;
 @Configuration
 public class KafkaConfig {
 
-    @Bean
-    public DefaultErrorHandler errorHandler(KafkaTemplate<Object, Object> kafkaTemplate) {
-        return KafkaErrorHandlers.deadLetterErrorHandler(kafkaTemplate, log);
-    }
+  @Bean
+  public DefaultErrorHandler errorHandler(KafkaTemplate<Object, Object> kafkaTemplate) {
+    return KafkaErrorHandlers.deadLetterErrorHandler(kafkaTemplate, log);
+  }
 }

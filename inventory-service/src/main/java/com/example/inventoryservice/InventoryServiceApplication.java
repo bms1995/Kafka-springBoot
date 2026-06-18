@@ -7,8 +7,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @Slf4j
 @SpringBootApplication
 public class InventoryServiceApplication {
-    public static void main(String[] args) {
-        SpringApplication.run(InventoryServiceApplication.class, args);
-        log.info("hello achref");
-    }
+  public static void main(String[] args) {
+    SpringApplication.run(InventoryServiceApplication.class, args);
+    log.info("hello achref");
+  }
 }

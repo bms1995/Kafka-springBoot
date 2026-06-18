@@ -12,18 +12,22 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class OutboxMetrics implements MeterBinder {
 
-    private final OutboxEventRepository outboxEventRepository;
+  private final OutboxEventRepository outboxEventRepository;
 
-    @Override
-    public void bindTo(MeterRegistry registry) {
-        Gauge.builder("order_outbox_pending_events", outboxEventRepository,
-                        repository -> repository.countByStatus(OutboxStatus.PENDING))
-                .description("Number of pending order outbox events")
-                .register(registry);
+  @Override
+  public void bindTo(MeterRegistry registry) {
+    Gauge.builder(
+            "order_outbox_pending_events",
+            outboxEventRepository,
+            repository -> repository.countByStatus(OutboxStatus.PENDING))
+        .description("Number of pending order outbox events")
+        .register(registry);
 
-        Gauge.builder("order_outbox_dead_events", outboxEventRepository,
-                        repository -> repository.countByStatus(OutboxStatus.DEAD))
-                .description("Number of dead order outbox events")
-                .register(registry);
-    }
+    Gauge.builder(
+            "order_outbox_dead_events",
+            outboxEventRepository,
+            repository -> repository.countByStatus(OutboxStatus.DEAD))
+        .description("Number of dead order outbox events")
+        .register(registry);
+  }
 }

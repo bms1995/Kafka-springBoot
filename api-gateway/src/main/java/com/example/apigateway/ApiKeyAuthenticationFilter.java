@@ -16,66 +16,63 @@ import reactor.core.publisher.Mono;
 @EnableConfigurationProperties({ApiKeyProperties.class, JwtProperties.class})
 public class ApiKeyAuthenticationFilter implements WebFilter, Ordered {
 
-    private final ApiKeyProperties properties;
-    private final JwtProperties jwtProperties;
-    private final ReactiveJwtDecoder jwtDecoder;
+  private final ApiKeyProperties properties;
+  private final JwtProperties jwtProperties;
+  private final ReactiveJwtDecoder jwtDecoder;
 
-    @Autowired
-    public ApiKeyAuthenticationFilter(
-            ApiKeyProperties properties,
-            JwtProperties jwtProperties,
-            ObjectProvider<ReactiveJwtDecoder> jwtDecoder
-    ) {
-        this(properties, jwtProperties, jwtDecoder.getIfAvailable());
+  @Autowired
+  public ApiKeyAuthenticationFilter(
+      ApiKeyProperties properties,
+      JwtProperties jwtProperties,
+      ObjectProvider<ReactiveJwtDecoder> jwtDecoder) {
+    this(properties, jwtProperties, jwtDecoder.getIfAvailable());
+  }
+
+  ApiKeyAuthenticationFilter(
+      ApiKeyProperties properties, JwtProperties jwtProperties, ReactiveJwtDecoder jwtDecoder) {
+    this.properties = properties;
+    this.jwtProperties = jwtProperties;
+    this.jwtDecoder = jwtDecoder;
+  }
+
+  @Override
+  public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+    if (!exchange.getRequest().getPath().value().startsWith("/api/")) {
+      return chain.filter(exchange);
     }
 
-    ApiKeyAuthenticationFilter(
-            ApiKeyProperties properties,
-            JwtProperties jwtProperties,
-            ReactiveJwtDecoder jwtDecoder
-    ) {
-        this.properties = properties;
-        this.jwtProperties = jwtProperties;
-        this.jwtDecoder = jwtDecoder;
+    if (!properties.enabled() && !jwtProperties.enabled()) {
+      return chain.filter(exchange);
     }
 
-    @Override
-    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        if (!exchange.getRequest().getPath().value().startsWith("/api/")) {
-            return chain.filter(exchange);
-        }
+    String apiKey = exchange.getRequest().getHeaders().getFirst(properties.headerName());
+    if (properties.enabled() && properties.value().equals(apiKey)) {
+      return chain.filter(exchange);
+    }
 
-        if (!properties.enabled() && !jwtProperties.enabled()) {
-            return chain.filter(exchange);
-        }
-
-        String apiKey = exchange.getRequest().getHeaders().getFirst(properties.headerName());
-        if (properties.enabled() && properties.value().equals(apiKey)) {
-            return chain.filter(exchange);
-        }
-
-        String authorization = exchange.getRequest().getHeaders().getFirst("Authorization");
-        if (jwtProperties.enabled() && authorization != null && authorization.startsWith("Bearer ")) {
-            if (jwtDecoder == null) {
-                return unauthorized(exchange);
-            }
-
-            String token = authorization.substring("Bearer ".length());
-            return jwtDecoder.decode(token)
-                    .flatMap(jwt -> chain.filter(exchange))
-                    .onErrorResume(ex -> unauthorized(exchange));
-        }
-
+    String authorization = exchange.getRequest().getHeaders().getFirst("Authorization");
+    if (jwtProperties.enabled() && authorization != null && authorization.startsWith("Bearer ")) {
+      if (jwtDecoder == null) {
         return unauthorized(exchange);
+      }
+
+      String token = authorization.substring("Bearer ".length());
+      return jwtDecoder
+          .decode(token)
+          .flatMap(jwt -> chain.filter(exchange))
+          .onErrorResume(ex -> unauthorized(exchange));
     }
 
-    private Mono<Void> unauthorized(ServerWebExchange exchange) {
-        exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-        return exchange.getResponse().setComplete();
-    }
+    return unauthorized(exchange);
+  }
 
-    @Override
-    public int getOrder() {
-        return Ordered.HIGHEST_PRECEDENCE + 2;
-    }
+  private Mono<Void> unauthorized(ServerWebExchange exchange) {
+    exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+    return exchange.getResponse().setComplete();
+  }
+
+  @Override
+  public int getOrder() {
+    return Ordered.HIGHEST_PRECEDENCE + 2;
+  }
 }

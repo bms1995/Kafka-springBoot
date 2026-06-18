@@ -1,11 +1,14 @@
 package com.example.paymentservice.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.example.events.OrderCreatedEvent;
 import com.example.paymentservice.entity.OutboxStatus;
 import com.example.paymentservice.entity.PaymentStatus;
-import com.example.events.OrderCreatedEvent;
 import com.example.paymentservice.repository.OutboxEventRepository;
 import com.example.paymentservice.repository.PaymentTransactionRepository;
 import com.example.paymentservice.repository.ProcessedEventRepository;
+import java.math.BigDecimal;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,76 +20,71 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.math.BigDecimal;
-
-import static org.assertj.core.api.Assertions.assertThat;
-
 @Testcontainers(disabledWithoutDocker = true)
-@SpringBootTest(properties = {
-        "app.outbox.publish-delay-ms=600000",
-        "app.kafka.listeners.enabled=false",
-        "spring.kafka.bootstrap-servers=localhost:19092"
-})
+@SpringBootTest(
+    properties = {
+      "app.outbox.publish-delay-ms=600000",
+      "app.kafka.listeners.enabled=false",
+      "spring.kafka.bootstrap-servers=localhost:19092"
+    })
 class PaymentServiceIntegrationTest {
 
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16")
-            .withDatabaseName("paymentdb")
-            .withUsername("myuser")
-            .withPassword("mypassword");
+  @Container
+  static PostgreSQLContainer<?> postgres =
+      new PostgreSQLContainer<>("postgres:16")
+          .withDatabaseName("paymentdb")
+          .withUsername("myuser")
+          .withPassword("mypassword");
 
-    @Autowired
-    private PaymentService paymentService;
+  @Autowired private PaymentService paymentService;
 
-    @Autowired
-    private PaymentTransactionRepository paymentTransactionRepository;
+  @Autowired private PaymentTransactionRepository paymentTransactionRepository;
 
-    @Autowired
-    private ProcessedEventRepository processedEventRepository;
+  @Autowired private ProcessedEventRepository processedEventRepository;
 
-    @Autowired
-    private OutboxEventRepository outboxEventRepository;
+  @Autowired private OutboxEventRepository outboxEventRepository;
 
-    @MockBean
-    private KafkaTemplate<String, Object> kafkaTemplate;
+  @MockBean private KafkaTemplate<String, Object> kafkaTemplate;
 
-    @DynamicPropertySource
-    static void databaseProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-    }
+  @DynamicPropertySource
+  static void databaseProperties(DynamicPropertyRegistry registry) {
+    registry.add("spring.datasource.url", postgres::getJdbcUrl);
+    registry.add("spring.datasource.username", postgres::getUsername);
+    registry.add("spring.datasource.password", postgres::getPassword);
+  }
 
-    @Test
-    void processPaymentPersistsTransactionProcessedEventAndOutboxEvent() {
-        OrderCreatedEvent event = new OrderCreatedEvent(
-                "order-it-1",
-                "Laptop",
-                1,
-                BigDecimal.valueOf(250).toPlainString(),
-                "customer@example.com",
-                "order-created-event-it-1",
-                "correlation-it-1",
-                "causation-it-1",
-                "2026-06-12T10:00:00Z",
-                "order-service",
-                "1"
-        );
+  @Test
+  void processPaymentPersistsTransactionProcessedEventAndOutboxEvent() {
+    OrderCreatedEvent event =
+        new OrderCreatedEvent(
+            "order-it-1",
+            "Laptop",
+            1,
+            BigDecimal.valueOf(250).toPlainString(),
+            "customer@example.com",
+            "order-created-event-it-1",
+            "correlation-it-1",
+            "causation-it-1",
+            "2026-06-12T10:00:00Z",
+            "order-service",
+            "1");
 
-        paymentService.processPayment(event);
-        paymentService.processPayment(event);
+    paymentService.processPayment(event);
+    paymentService.processPayment(event);
 
-        assertThat(paymentTransactionRepository.findById(event.getOrderId()))
-                .get()
-                .extracting(transaction -> transaction.getStatus())
-                .isEqualTo(PaymentStatus.SUCCESS);
-        assertThat(processedEventRepository.existsById(event.getEventId())).isTrue();
-        assertThat(outboxEventRepository.findTop50ByStatusOrderByCreatedAtAsc(OutboxStatus.PENDING))
-                .hasSize(1)
-                .first()
-                .satisfies(outboxEvent -> {
-                    assertThat(outboxEvent.getAggregateId()).isEqualTo(event.getOrderId());
-                    assertThat(outboxEvent.getTopic()).isEqualTo(PaymentOutboxService.PAYMENT_PROCESSED_TOPIC);
-                });
-    }
+    assertThat(paymentTransactionRepository.findById(event.getOrderId()))
+        .get()
+        .extracting(transaction -> transaction.getStatus())
+        .isEqualTo(PaymentStatus.SUCCESS);
+    assertThat(processedEventRepository.existsById(event.getEventId())).isTrue();
+    assertThat(outboxEventRepository.findTop50ByStatusOrderByCreatedAtAsc(OutboxStatus.PENDING))
+        .hasSize(1)
+        .first()
+        .satisfies(
+            outboxEvent -> {
+              assertThat(outboxEvent.getAggregateId()).isEqualTo(event.getOrderId());
+              assertThat(outboxEvent.getTopic())
+                  .isEqualTo(PaymentOutboxService.PAYMENT_PROCESSED_TOPIC);
+            });
+  }
 }

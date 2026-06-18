@@ -15,16 +15,15 @@ import lombok.Setter;
 @Table(name = "processed_events")
 public class ProcessedEvent {
 
-    @Id
-    @Column(name = "event_id")
-    private String eventId;
+  @Id
+  @Column(name = "event_id")
+  private String eventId;
 
-    @Column(name = "order_id", nullable = false)
-    private String orderId;
+  @Column(name = "order_id", nullable = false)
+  private String orderId;
 
-    public ProcessedEvent(String eventId, String orderId) {
-        this.eventId = eventId;
-        this.orderId = orderId;
-    }
-
+  public ProcessedEvent(String eventId, String orderId) {
+    this.eventId = eventId;
+    this.orderId = orderId;
+  }
 }
