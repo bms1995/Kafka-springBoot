@@ -10,6 +10,7 @@ import com.example.inventoryservice.repository.ProcessedEventRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -24,6 +25,7 @@ public class InventoryService {
     private final InventoryProducer inventoryProducer;
     private final ProcessedEventRepository processedEventRepository;
 
+    @Transactional
     public void updateInventory(PaymentProcessedEvent event) {
         if (processedEventRepository.existsById(event.getEventId())) {
             log.warn("Already processed inventory event eventId={} orderId={}", event.getEventId(), event.getOrderId());
@@ -32,13 +34,13 @@ public class InventoryService {
 
         if (!SUCCESS_PAYMENT_STATUS.equals(event.getPaymentStatus())) {
             publishInventoryFailure(event, "Payment status is not successful");
-            processedEventRepository.save(new ProcessedEvent(event.getEventId(), event.getOrderId()));
+            markProcessed(event);
             return;
         }
 
         if (event.getOrderId().startsWith(INVENTORY_FAILURE_ORDER_PREFIX)) {
             publishInventoryFailure(event, "Inventory is not available");
-            processedEventRepository.save(new ProcessedEvent(event.getEventId(), event.getOrderId()));
+            markProcessed(event);
             return;
         }
 
@@ -57,6 +59,10 @@ public class InventoryService {
         );
 
         inventoryProducer.send(inventoryEvent);
+        markProcessed(event);
+    }
+
+    private void markProcessed(PaymentProcessedEvent event) {
         processedEventRepository.save(new ProcessedEvent(event.getEventId(), event.getOrderId()));
     }
 

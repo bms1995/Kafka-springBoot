@@ -156,8 +156,11 @@ class PaymentServiceTest {
                 ArgumentCaptor.forClass(PaymentRefundedEvent.class);
         ArgumentCaptor<PaymentTransaction> transactionCaptor =
                 ArgumentCaptor.forClass(PaymentTransaction.class);
+        ArgumentCaptor<ProcessedEvent> processedEventCaptor =
+                ArgumentCaptor.forClass(ProcessedEvent.class);
 
         verify(paymentTransactionRepository).save(transactionCaptor.capture());
+        verify(processedEventRepository).save(processedEventCaptor.capture());
         verify(paymentOutboxService).enqueuePaymentRefunded(
                 org.mockito.ArgumentMatchers.eq(event.getOrderId()),
                 refundedEventCaptor.capture()
@@ -168,6 +171,8 @@ class PaymentServiceTest {
         assertThat(refundedEvent.getStatus()).isEqualTo("REFUNDED");
         assertThat(refundedEvent.getReason()).contains(event.getReason());
         assertThat(transactionCaptor.getValue().getStatus()).isEqualTo(PaymentStatus.REFUNDED);
+        assertThat(processedEventCaptor.getValue().getEventId()).isEqualTo(event.getEventId());
+        assertThat(processedEventCaptor.getValue().getOrderId()).isEqualTo(event.getOrderId());
     }
 
     @Test
@@ -199,6 +204,36 @@ class PaymentServiceTest {
                 org.mockito.ArgumentMatchers.any()
         );
         verify(paymentTransactionRepository, never()).save(org.mockito.ArgumentMatchers.any());
+        ArgumentCaptor<ProcessedEvent> processedEventCaptor =
+                ArgumentCaptor.forClass(ProcessedEvent.class);
+        verify(processedEventRepository).save(processedEventCaptor.capture());
+        assertThat(processedEventCaptor.getValue().getEventId()).isEqualTo(event.getEventId());
+        assertThat(processedEventCaptor.getValue().getOrderId()).isEqualTo(event.getOrderId());
+    }
+
+    @Test
+    void compensatePaymentSkipsAlreadyProcessedCompensationEvent() {
+        InventoryFailedEvent event = new InventoryFailedEvent(
+                "order-1",
+                "FAILED",
+                "Inventory is not available",
+                "inventory-failed-event-1",
+                "correlation-1",
+                "payment-processed-event-1",
+                "2026-06-12T10:00:00Z",
+                "inventory-service",
+                "1"
+        );
+        when(processedEventRepository.existsById(event.getEventId())).thenReturn(true);
+
+        paymentService.compensatePayment(event);
+
+        verify(paymentTransactionRepository, never()).findById(org.mockito.ArgumentMatchers.any());
+        verify(paymentOutboxService, never()).enqueuePaymentRefunded(
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any()
+        );
+        verify(processedEventRepository, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
     private OrderCreatedEvent orderCreatedEvent(String orderId, BigDecimal amount) {

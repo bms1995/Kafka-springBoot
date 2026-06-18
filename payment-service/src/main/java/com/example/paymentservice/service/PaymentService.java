@@ -97,16 +97,23 @@ public class PaymentService {
 
     @Transactional
     public void compensatePayment(InventoryFailedEvent event) {
+        if (processedEventRepository.existsById(event.getEventId())) {
+            log.warn("Already processed compensation event eventId={} orderId={}", event.getEventId(), event.getOrderId());
+            return;
+        }
+
         PaymentTransaction transaction = paymentTransactionRepository.findById(event.getOrderId())
                 .orElse(null);
 
         if (transaction == null) {
             log.warn("Skipping compensation for unknown orderId={}", event.getOrderId());
+            processedEventRepository.save(new ProcessedEvent(event.getEventId(), event.getOrderId()));
             return;
         }
 
         if (PaymentStatus.REFUNDED.equals(transaction.getStatus())) {
             log.warn("Payment already refunded for orderId={}", event.getOrderId());
+            processedEventRepository.save(new ProcessedEvent(event.getEventId(), event.getOrderId()));
             return;
         }
 
@@ -130,6 +137,7 @@ public class PaymentService {
         transaction.markRefunded(refundedEvent.getReason());
         paymentTransactionRepository.save(transaction);
         paymentOutboxService.enqueuePaymentRefunded(event.getOrderId(), refundedEvent);
+        processedEventRepository.save(new ProcessedEvent(event.getEventId(), event.getOrderId()));
         paymentMetrics.incrementPaymentRefunded();
     }
 
