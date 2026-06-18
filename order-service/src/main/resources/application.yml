@@ -9,6 +9,7 @@ spring:
     username: ${ORDER_DB_USERNAME:myuser}
     password: ${ORDER_DB_PASSWORD:mypassword}
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: validate
     properties:

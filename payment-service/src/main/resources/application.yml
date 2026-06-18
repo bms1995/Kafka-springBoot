@@ -10,6 +10,7 @@ spring:
     password: ${PAYMENT_DB_PASSWORD:mypassword}
 
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: validate
     show-sql: false
