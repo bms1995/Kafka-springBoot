@@ -27,3 +27,26 @@
 - Replay by `eventId` or `correlationId`, never by broad time window without review.
 - Keep the original `eventId` for idempotent consumers.
 - Record operator, reason, timestamp and affected order ids.
+
+## Controlled Replay
+
+Preview one matching record without publishing anything:
+
+```powershell
+.\scripts\kafka-dlq-replay.ps1 -Topic order-created.DLQ -Key order-123
+```
+
+After correcting the root cause and validating idempotence, execute the replay:
+
+```powershell
+.\scripts\kafka-dlq-replay.ps1 `
+  -Topic order-created.DLQ `
+  -Key order-123 `
+  -Execute `
+  -Operator "alice" `
+  -Reason "INC-42 schema fix deployed"
+```
+
+The tool copies raw key/value bytes and existing headers, so Avro payloads are not decoded or
+re-encoded. It adds source offset and operator audit headers. Execution always requires an exact
+key, operator and reason; replay is limited to one record by default and 100 maximum.
