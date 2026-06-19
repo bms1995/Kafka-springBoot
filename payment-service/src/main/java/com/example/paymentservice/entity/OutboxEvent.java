@@ -58,6 +58,7 @@ public class OutboxEvent {
     this.nextAttemptAt = this.createdAt;
   }
 
+  @SuppressWarnings("PMD.NullAssignment")
   public void markPublished() {
     this.status = OutboxStatus.PUBLISHED;
     this.publishedAt = Instant.now();
@@ -71,6 +72,7 @@ public class OutboxEvent {
     this.processingStartedAt = Instant.now();
   }
 
+  @SuppressWarnings("PMD.NullAssignment")
   public void markPublishFailed(
       String errorMessage, int maxAttempts, long baseBackoffMs, long maxBackoffMs) {
     this.attemptCount++;
