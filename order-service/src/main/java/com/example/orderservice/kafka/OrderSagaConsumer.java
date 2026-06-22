@@ -21,12 +21,14 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class OrderSagaConsumer {
 
+  private static final String CONSUMER_GROUP = "order-saga-group";
+
   private final OrderService orderService;
   private final OrderEventPayloadSerializer payloadSerializer;
 
   @KafkaListener(
       topics = "${app.kafka.topics.payment-processed:payment-processed}",
-      groupId = "order-saga-group")
+      groupId = CONSUMER_GROUP)
   public void consumePaymentProcessed(
       PaymentProcessedEvent event,
       @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
@@ -39,7 +41,7 @@ public class OrderSagaConsumer {
 
   @KafkaListener(
       topics = "${app.kafka.topics.payment-failed:payment-failed}",
-      groupId = "order-saga-group")
+      groupId = CONSUMER_GROUP)
   public void consumePaymentFailed(
       PaymentFailedEvent event,
       @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
@@ -53,7 +55,7 @@ public class OrderSagaConsumer {
 
   @KafkaListener(
       topics = "${app.kafka.topics.inventory-updated:inventory-updated}",
-      groupId = "order-saga-group")
+      groupId = CONSUMER_GROUP)
   public void consumeInventoryUpdated(
       InventoryUpdatedEvent event,
       @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
@@ -66,7 +68,7 @@ public class OrderSagaConsumer {
 
   @KafkaListener(
       topics = "${app.kafka.topics.inventory-failed:inventory-failed}",
-      groupId = "order-saga-group")
+      groupId = CONSUMER_GROUP)
   public void consumeInventoryFailed(
       InventoryFailedEvent event,
       @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
@@ -80,7 +82,7 @@ public class OrderSagaConsumer {
 
   @KafkaListener(
       topics = "${app.kafka.topics.payment-refunded:payment-refunded}",
-      groupId = "order-saga-group")
+      groupId = CONSUMER_GROUP)
   public void consumePaymentRefunded(
       PaymentRefundedEvent event,
       @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
